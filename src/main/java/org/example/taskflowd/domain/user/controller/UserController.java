@@ -1,6 +1,7 @@
 package org.example.taskflowd.domain.user.controller;
 
 import org.example.taskflowd.common.dto.response.ApiResponse;
+import org.example.taskflowd.common.security.AuthUser;
 import org.example.taskflowd.domain.user.dto.request.UserDeleteRequestDto;
 import org.example.taskflowd.domain.user.dto.request.UserSaveRequestDto;
 import org.example.taskflowd.domain.user.dto.request.UserUpdateRequestDto;
@@ -22,13 +23,13 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/auth")
+@RequestMapping("/api")
 public class UserController {
 
     private final UserService userService; // 실제 비즈니스 로직 처리는 UserService 에서 진행.
 
     // 회원가입 API
-    @PostMapping("/register")
+    @PostMapping("/auth/register")
     public ResponseEntity<ApiResponse<UserResponseDto>> signup(@RequestBody UserSaveRequestDto dto) {
         UserResponseDto userDto = userService.save(dto);
         return ResponseEntity.ok(ApiResponse.ofSuccess(UserConst.SIGNUP_SUCCESS, userDto));
@@ -48,7 +49,15 @@ public class UserController {
         return ResponseEntity.ok(userDto);
     }
 
-    //로그인한 사용자 정보 수정 API
+    // 로그인한 사용자 정보 조회 API
+    @GetMapping("/users/me")
+    public ResponseEntity<ApiResponse<UserResponseDto>> getLoginUser(@AuthenticationPrincipal AuthUser authUser) {
+
+        UserResponseDto userDto = userService.getProfile(authUser.id());
+        return ResponseEntity.ok(ApiResponse.ofSuccess("사용자 정보를 조회했습니다.", userDto));
+    }
+
+    // 로그인한 사용자 정보 수정 API
     @PutMapping("/me/update")
     public ResponseEntity<UserResponseDto> updateAccount(
             @AuthenticationPrincipal User principal,
