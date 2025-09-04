@@ -7,10 +7,10 @@ import org.example.taskflowd.domain.user.dto.request.UserUpdateRequestDto;
 import org.example.taskflowd.domain.user.dto.mapper.UserMapper;
 import org.example.taskflowd.domain.user.dto.request.UserSaveRequestDto;
 import org.example.taskflowd.domain.user.dto.request.LoginRequestDto;
+import org.example.taskflowd.domain.user.dto.response.LoginResponseDto;
 import org.example.taskflowd.domain.user.dto.response.UserResponseDto;
 import org.example.taskflowd.domain.user.entity.User;
 import org.example.taskflowd.domain.user.repository.UserRepository;
-import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -44,7 +44,7 @@ public class UserServiceImpl implements UserService {
         }
 
         String encodedPassword = passwordEncoder.encode(dto.getPassword());
-        User user = new User(dto.getName(), dto.getUserName(), dto.getEmail(), encodedPassword);
+        User user = new User(dto.getName(), dto.getUsername(), dto.getEmail(), encodedPassword);
         userRepository.save(user);
 
         return UserMapper.toResponseDto(user);
@@ -53,9 +53,9 @@ public class UserServiceImpl implements UserService {
     // 로그인 → JWT 발급
     @Override
     @Transactional
-    public String handleLogin(LoginRequestDto dto) {
+    public LoginResponseDto handleLogin(LoginRequestDto dto) {
         // 1. 이메일로 사용자 조회 (Soft Delete 적용)
-        User user = userRepository.findByEmailAndDeletedAtIsNull(dto.getEmail())
+        User user = userRepository.findByUserNameAndDeletedAtIsNull(dto.getUsername())
                 .orElseThrow(() -> new GlobalException(ErrorCodeEnum.USER_NOT_FOUND));
 
         // 2. 비밀번호 검증
@@ -65,7 +65,8 @@ public class UserServiceImpl implements UserService {
         }
 
         // 3. JWT 생성 (일관되게 userId를 subject로)
-        return jwtProvider.createToken(String.valueOf(user.getId()));
+        String token = jwtProvider.createToken(String.valueOf(user.getId()));
+        return new LoginResponseDto(token);
     }
 
 

@@ -3,6 +3,7 @@ package org.example.taskflowd.domain.user.controller;
 
 import org.example.taskflowd.common.dto.response.ApiResponse;
 import org.example.taskflowd.domain.user.dto.request.LoginRequestDto;
+import org.example.taskflowd.domain.user.dto.response.LoginResponseDto;
 import org.example.taskflowd.domain.user.service.UserService;
 import org.example.taskflowd.domain.user.util.UserConst;
 import lombok.RequiredArgsConstructor;
@@ -35,10 +36,10 @@ public class LoginController {
      */
 
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<String>> login(@RequestBody LoginRequestDto dto)
+    public ResponseEntity<ApiResponse<?>> login(@RequestBody LoginRequestDto dto)
     {   // 서비스에서 로그인 처리 및 JWT 발급
-        String token = userService.handleLogin(dto);
-        return ResponseEntity.ok(new ApiResponse<>(UserConst.LOGIN_SUCCESS, token));
+        LoginResponseDto token = userService.handleLogin(dto);
+        return ResponseEntity.ok(ApiResponse.ofSuccess(UserConst.LOGIN_SUCCESS, token));
     }
 
     /**
