@@ -1,6 +1,5 @@
-package org.example.taskflowd.domain.auth.config;
+package org.example.taskflowd.common.security;
 
-import org.example.taskflowd.domain.auth.jwt.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;

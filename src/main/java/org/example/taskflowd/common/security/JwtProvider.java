@@ -1,4 +1,4 @@
-package org.example.taskflowd.domain.auth.jwt;
+package org.example.taskflowd.common.security;
 
 
 import io.jsonwebtoken.Claims;
