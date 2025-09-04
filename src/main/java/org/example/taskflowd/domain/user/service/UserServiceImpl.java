@@ -44,7 +44,7 @@ public class UserServiceImpl implements UserService {
         }
 
         String encodedPassword = passwordEncoder.encode(dto.getPassword());
-        User user = new User(dto.getUserName(), dto.getEmail(), encodedPassword);
+        User user = new User(dto.getName(), dto.getUserName(), dto.getEmail(), encodedPassword);
         userRepository.save(user);
 
         return UserMapper.toResponseDto(user);

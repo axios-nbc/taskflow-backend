@@ -20,15 +20,17 @@ import java.time.LocalDateTime;
 @Getter
 public class UserResponseDto {
     private final Long id;
-    private final String userName;
+    private final String name;
+    private final String username;
     private final String email;
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
 
     //모든 필드를 초기화하는 생성자
-    public UserResponseDto(Long id, String userName, String email, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public UserResponseDto(Long id, String name, String username, String email, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
-        this.userName = userName;
+        this.name = name;
+        this.username = username;
         this.email = email;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
