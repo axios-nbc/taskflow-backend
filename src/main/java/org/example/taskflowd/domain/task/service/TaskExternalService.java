@@ -49,7 +49,7 @@ public class TaskExternalService {
         User writer = userService.getUser(loginUserId);
         User assignee = userService.getUser(request.assigneeId());
 
-        Task task = taskMapper.toEntity(request, assignee);
+        Task task = taskMapper.toEntity(request, writer, assignee);
         Task savedTask = taskRepository.save(task);
 
         return taskMapper.toCreateResponse(savedTask);
