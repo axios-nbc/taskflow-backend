@@ -14,6 +14,7 @@ import org.example.taskflowd.domain.user.entity.User;
 import org.example.taskflowd.domain.user.service.UserService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -55,9 +56,8 @@ public class TaskExternalService {
     }
 
     // 2.2 Task 목록 조회
-    public Page<TaskListItemResponse> getTasks (Pageable pageable) {
-        Page<Task> tasks = taskRepository.findAllByDeletedAtIsNull(pageable);
-
+    public Page<TaskListItemResponse> getTasks(Pageable pageable, Specification<Task> spec) {
+        Page<Task> tasks = taskRepository.findAll(spec, pageable);
         return tasks.map(taskMapper::toListItemResponse);
     }
 
@@ -71,7 +71,6 @@ public class TaskExternalService {
     // 2.4 Task 수정
     @Transactional
     public TaskUpdateResponse updateTask(TaskUpdateRequest request, Long taskId, Long loginUserId) {
-        // TODO : 업데이트 권한 상세화
         // 현제 - 작성자가 및 담당자 아닐 경우 권한 부족
         User loginUser = userService.getUser(loginUserId);
         Task task = getTaskOrThrow(taskId);
@@ -102,7 +101,6 @@ public class TaskExternalService {
     // 2.5 Task 상태 업데이트
     @Transactional
     public TaskStatusChangeResponse updateTaskStatus(TaskStatusUpdateRequest request, Long taskId, Long loginUserId) {
-        // TODO : 업데이트 권한 상세화
         // 현제 - 작성자가 및 담당자 아닐 경우 권한 부족
         User loginUser = userService.getUser(loginUserId);
         Task task = getTaskOrThrow(taskId);
@@ -120,7 +118,6 @@ public class TaskExternalService {
     // 2.6 Task 삭제
     @Transactional
     public void deleteTask(Long taskId, Long loginUserId) {
-        // TODO : 업데이트 권한 상세화
         // 현제 - 작성자가 및 담당자 아닐 경우 권한 부족
         User loginUser = userService.getUser(loginUserId);
         Task task = getTaskOrThrow(taskId);

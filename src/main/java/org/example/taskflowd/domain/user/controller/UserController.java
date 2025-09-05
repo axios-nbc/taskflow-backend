@@ -71,9 +71,8 @@ public class UserController {
 
     //로그인한 사용자 계정 삭제 API
     @DeleteMapping("/withdraw")
-    public ResponseEntity<String> deleteAccount(@AuthenticationPrincipal User principal, @RequestBody UserDeleteRequestDto dto) {
-        Long userId = Long.parseLong(principal.getUsername());
-        userService.deleteById(userId, dto.getPassword());
+    public ResponseEntity<String> deleteAccount(@AuthenticationPrincipal AuthUser authUser, @RequestBody UserDeleteRequestDto dto) {
+        userService.deleteById(authUser.id(), dto.getPassword());
         return ResponseEntity.ok("계정이 삭제되었습니다");
     }
-        }
+}

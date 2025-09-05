@@ -17,9 +17,6 @@ import java.util.List;
 import java.util.Optional;
 
 public interface TaskRepository extends JpaRepository<Task, Long>, JpaSpecificationExecutor<Task> {
-    // 전체 기록 페이징
-    Page<Task> findAllByDeletedAtIsNull(Pageable pageable);
-
     // 작성자/담당자 기준 페이징
     Page<Task> findByWriterId(Long writerId, Pageable pageable);
     Page<Task> findByAssigneeId(Long assigneeId, Pageable pageable);
