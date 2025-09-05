@@ -8,8 +8,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -57,4 +60,32 @@ public interface TaskRepository extends JpaRepository<Task, Long>, JpaSpecificat
 
     // 담당자+상태 마감일 오름차순
     Page<Task> findByAssigneeIdAndStatusOrderByDueDateAsc(Long assigneeId, TaskStatus status, Pageable pageable);
+
+    // DashboardService용
+    @Query("SELECT t FROM Task t " +
+        "WHERE t.assignee.id = :assigneeId " +
+        "AND t.dueDate BETWEEN :startDate AND :endDate " +
+        "AND t.deletedAt IS NULL")
+    List<Task> findByAssigneeIdAndDueDateBetween(
+        @Param("assigneeId") Long assigneeId,
+        @Param("startDate") LocalDateTime startDate,
+        @Param("endDate") LocalDateTime endDate);
+
+    @Query("SELECT t FROM Task t " +
+        "WHERE t.assignee.id = :assigneeId " +
+        "AND t.dueDate > :afterDate " +
+        "AND t.deletedAt IS NULL " +
+        "ORDER BY t.dueDate ASC")
+    List<Task> findByAssigneeIdAndDueDateAfter(
+        @Param("assigneeId") Long assigneeId,
+        @Param("afterDate") LocalDateTime afterDate);
+
+    @Query("SELECT t FROM Task t " +
+        "WHERE t.assignee.id = :assigneeId " +
+        "AND t.dueDate < :beforeDate " +
+        "AND t.deletedAt IS NULL " +
+        "ORDER BY t.dueDate DESC")
+    List<Task> findByAssigneeIdAndDueDateBefore(
+        @Param("assigneeId") Long assigneeId,
+        @Param("beforeDate") LocalDateTime beforeDate);
 }
