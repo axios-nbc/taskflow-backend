@@ -19,6 +19,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import java.net.URI;
 
 @RestController
 @RequiredArgsConstructor
@@ -35,10 +38,16 @@ public class CommentController {
             @AuthenticationPrincipal AuthUser authUser,
             @Validated @RequestBody CreateCommentRequest createCommentRequest,
             @PathVariable Long taskId) {
+        CreateCommentResponse response = commentExternalService.createComment(createCommentRequest, taskId, authUser.id());
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(response.id())
+                .toUri();
+
         return ApiResponse.created(
                 CommentResponseMessage.COMMENT_CREATED,
-                commentExternalService.createComment(createCommentRequest, taskId, authUser.id()),
-                null
+                response,
+                location
         );
     }
 

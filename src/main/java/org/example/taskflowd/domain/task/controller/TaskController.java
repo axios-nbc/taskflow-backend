@@ -46,7 +46,7 @@ public class TaskController {
         TaskCreateResponse response = taskExternalService.createTask(request, authUser.id());
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
-                .buildAndExpand(response.id())   // TaskCreateResponse 안에 taskId 필드가 있다고 가정
+                .buildAndExpand(response.id())
                 .toUri();
 
         return ApiResponse.created(
