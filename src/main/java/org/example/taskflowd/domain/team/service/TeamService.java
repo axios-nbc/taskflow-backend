@@ -6,7 +6,6 @@ import org.example.taskflowd.common.exception.GlobalException;
 import org.example.taskflowd.domain.team.dto.TeamCreateRequest;
 import org.example.taskflowd.domain.team.dto.TeamResponse;
 import org.example.taskflowd.domain.team.dto.TeamUpdateRequest;
-import org.example.taskflowd.domain.team.dto.UserResponse;
 import org.example.taskflowd.domain.team.entity.Team;
 import org.example.taskflowd.domain.team.entity.TeamMember;
 import org.example.taskflowd.domain.team.exeption.TeamErrorCode;
@@ -79,7 +78,7 @@ public class TeamService {
     }
 
     // 팀 멤버 목록 조회
-    public List<UserResponse> getTeamMembers(Long teamId) {
+    public List<UserResponseDto> getTeamMembers(Long teamId) {
         // 팀 존재 확인
         findTeamById(teamId);
 
@@ -91,7 +90,7 @@ public class TeamService {
 
     // Entity to DTO 변환 메서드
     private TeamResponse convertToTeamResponse(Team team) {
-        List<UserResponse> members = teamMemberRepository.findByTeamId(team.getId())
+        List<UserResponseDto> members = teamMemberRepository.findByTeamId(team.getId())
                 .stream()
                 .map(this::convertToUserResponse)
                 .collect(Collectors.toList());
@@ -105,15 +104,15 @@ public class TeamService {
         );
     }
 
-    private UserResponse convertToUserResponse(TeamMember teamMember) {
+    private UserResponseDto convertToUserResponse(TeamMember teamMember) {
         UserResponseDto userDto = userService.getProfile(teamMember.getUserId());
-        return new UserResponse(
-//                userDto.getId(),
-//                userDto.getUserName(),  // username
-//                userDto.getUserName(),  // name (동일하게 사용)
-//                userDto.getEmail(),
-//                teamMember.getRole(),
-//                userDto.getCreatedAt()
+        return new UserResponseDto(
+                userDto.id(),
+                userDto.username(),
+                userDto.name(),
+                userDto.email(),
+                teamMember.getRole(),
+                userDto.createdAt()
         );
     }
 

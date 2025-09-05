@@ -6,7 +6,6 @@ import lombok.RequiredArgsConstructor;
 import org.example.taskflowd.common.exception.GlobalException;
 import org.example.taskflowd.domain.team.dto.TeamMemberAddRequest;
 import org.example.taskflowd.domain.team.dto.TeamResponse;
-import org.example.taskflowd.domain.team.dto.UserResponse;
 import org.example.taskflowd.domain.team.entity.Team;
 import org.example.taskflowd.domain.team.entity.TeamMember;
 import org.example.taskflowd.domain.team.exeption.TeamErrorCode;
@@ -61,7 +60,7 @@ public class TeamMemberService {
     }
 
     // 추가 가능한 사용자 목록 조회
-    public List<UserResponse> getAvailableUsers(Long teamId) {
+    public List<UserResponseDto> getAvailableUsers(Long teamId) {
         findTeamById(teamId);
 
         List<UserResponseDto> allUsers = userService.findAll();
@@ -70,7 +69,7 @@ public class TeamMemberService {
 
         return allUsers.stream()
                 .filter(userDto -> !teamMemberIds.contains(userDto.id()))
-                .map(userDto -> new UserResponse(
+                .map(userDto -> new UserResponseDto(
                         userDto.id(),
                         userDto.name(),
                         userDto.username(),
@@ -83,7 +82,7 @@ public class TeamMemberService {
 
     // Entity to DTO 변환 메서드
     private TeamResponse convertToTeamResponse(Team team) {
-        List<UserResponse> members = teamMemberRepository.findByTeamId(team.getId())
+        List<UserResponseDto> members = teamMemberRepository.findByTeamId(team.getId())
                 .stream()
                 .map(this::convertToUserResponse)
                 .collect(Collectors.toList());
@@ -97,9 +96,9 @@ public class TeamMemberService {
         );
     }
 
-    private UserResponse convertToUserResponse(TeamMember teamMember) {
+    private UserResponseDto convertToUserResponse(TeamMember teamMember) {
         UserResponseDto userDto = userService.getProfile(teamMember.getUserId());
-        return new UserResponse(
+        return new UserResponseDto(
                 userDto.id(),
                 userDto.name(),
                 userDto.username(),

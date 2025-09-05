@@ -2,6 +2,7 @@ package org.example.taskflowd.domain.team.dto;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.example.taskflowd.domain.user.dto.response.UserResponseDto;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -14,10 +15,10 @@ public class TeamResponse {
     private String name;
     private String description;
     private LocalDateTime createdAt;
-    private List<UserResponse> members;
+    private List<UserResponseDto> members;
 
     public TeamResponse(Long id, String name, String description,
-                        LocalDateTime createdAt, List<UserResponse> members) {
+                        LocalDateTime createdAt, List<UserResponseDto> members) {
         this.id = id;
         this.name = name;
         this.description = description;

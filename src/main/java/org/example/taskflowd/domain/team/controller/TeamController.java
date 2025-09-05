@@ -10,6 +10,7 @@ import org.example.taskflowd.domain.team.entity.Team;
 import org.example.taskflowd.domain.team.enums.TeamResponseMessage;
 import org.example.taskflowd.domain.team.service.TeamMemberService;
 import org.example.taskflowd.domain.team.service.TeamService;
+import org.example.taskflowd.domain.user.dto.response.UserResponseDto;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -38,8 +39,8 @@ public class TeamController {
 
     // 팀 멤버 목록 조회
     @GetMapping("/{teamId}/members")
-    public ResponseEntity<ApiResponse<List<UserResponse>>> getTeamMembers(@PathVariable Long teamId) {
-        List<UserResponse> members = teamService.getTeamMembers(teamId);
+    public ResponseEntity<ApiResponse<List<UserResponseDto>>> getTeamMembers(@PathVariable Long teamId) {
+        List<UserResponseDto> members = teamService.getTeamMembers(teamId);
         return ApiResponse.ok(TeamResponseMessage.TEAM_MEMBER_LIST_INQUIRE, members);
     }
 
@@ -86,8 +87,8 @@ public class TeamController {
 
     // 추가 가능한 사용자 목록 조회
     @GetMapping("/users/available")
-    public ResponseEntity<ApiResponse<List<UserResponse>>> getAvailableUsers(@RequestParam Long teamId) {
-        List<UserResponse> availableUsers = teamMemberService.getAvailableUsers(teamId);
+    public ResponseEntity<ApiResponse<List<UserResponseDto>>> getAvailableUsers(@RequestParam Long teamId) {
+        List<UserResponseDto> availableUsers = teamMemberService.getAvailableUsers(teamId);
         return ApiResponse.ok(TeamResponseMessage.AVAILABLE_USERS_INQUIRE, availableUsers);
     }
 }
