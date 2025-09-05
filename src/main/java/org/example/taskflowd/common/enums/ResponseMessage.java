@@ -17,7 +17,11 @@ public enum ResponseMessage {
     COMMENT_LIST_INQUIRE("댓글 목록을 조회했습니다."),
     COMMENT_UPDATED("댓글이 수정되었습니다."),
     COMMENT_DELETE("댓글이 삭제되었습니다."),
-    COMMENT_DELETE_WITH_CHILD("댓글과 대댓글들이 삭제되었습니다.");
+    COMMENT_DELETE_WITH_CHILD("댓글과 대댓글들이 삭제되었습니다."),
+
+    MY_TASKS_SUMMARY_INQUIRE("내 작업 요약을 조회했습니다."),
+    TEAM_PROGRESS_INQUIRE("팀 진행률을 조회했습니다."),
+    INTEGRATED_SEARCH_COMPLETED("통합 검색이 완료되었습니다.");
 
     private final String message;
 
