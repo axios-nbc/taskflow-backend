@@ -7,7 +7,6 @@ import java.time.LocalDateTime;
 
 @Getter
 @NoArgsConstructor
-//유저 도메인과 협업해야함
 public class UserResponse {
 
     private Long id;

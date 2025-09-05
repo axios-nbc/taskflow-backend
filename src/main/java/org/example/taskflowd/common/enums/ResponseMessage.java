@@ -3,7 +3,10 @@ package org.example.taskflowd.common.enums;
 import lombok.Getter;
 
 public interface ResponseMessage {
+
+    
     String getMessage();
+
 }
 
 /** Message 예시 */

@@ -69,14 +69,14 @@ public class TeamMemberService {
                 .stream().map(TeamMember::getUserId).toList();
 
         return allUsers.stream()
-                .filter(userDto -> !teamMemberIds.contains(userDto.getId()))
+                .filter(userDto -> !teamMemberIds.contains(userDto.id()))
                 .map(userDto -> new UserResponse(
-                        userDto.getId(),
-                        userDto.getUserName(),
-                        userDto.getUserName(),
-                        userDto.getEmail(),
+                        userDto.id(),
+                        userDto.name(),
+                        userDto.username(),
+                        userDto.email(),
                         "USER",
-                        userDto.getCreatedAt()
+                        userDto.createdAt()
                 ))
                 .collect(Collectors.toList());
     }
@@ -100,12 +100,12 @@ public class TeamMemberService {
     private UserResponse convertToUserResponse(TeamMember teamMember) {
         UserResponseDto userDto = userService.getProfile(teamMember.getUserId());
         return new UserResponse(
-                userDto.getId(),
-                userDto.getUserName(),
-                userDto.getUserName(),
-                userDto.getEmail(),
+                userDto.id(),
+                userDto.name(),
+                userDto.username(),
+                userDto.email(),
                 teamMember.getRole(),
-                userDto.getCreatedAt()
+                userDto.createdAt()
         );
     }
 

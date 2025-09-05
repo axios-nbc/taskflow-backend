@@ -108,12 +108,12 @@ public class TeamService {
     private UserResponse convertToUserResponse(TeamMember teamMember) {
         UserResponseDto userDto = userService.getProfile(teamMember.getUserId());
         return new UserResponse(
-                userDto.getId(),
-                userDto.getUserName(),  // username
-                userDto.getUserName(),  // name (동일하게 사용)
-                userDto.getEmail(),
-                teamMember.getRole(),
-                userDto.getCreatedAt()
+//                userDto.getId(),
+//                userDto.getUserName(),  // username
+//                userDto.getUserName(),  // name (동일하게 사용)
+//                userDto.getEmail(),
+//                teamMember.getRole(),
+//                userDto.getCreatedAt()
         );
     }
 
