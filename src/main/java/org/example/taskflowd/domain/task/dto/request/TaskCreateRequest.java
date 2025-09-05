@@ -18,10 +18,10 @@ public record TaskCreateRequest(
   @FutureOrPresent
   LocalDateTime dueDate,
 
-  @NotBlank
+  //@NotBlank
   TaskPriority priority,
 
-  @NotBlank
+  //@NotBlank
   @Positive
   Long assigneeId
 ){
