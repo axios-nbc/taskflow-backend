@@ -1,0 +1,303 @@
+package org.example.taskflowd.domain.dashboard.service;
+
+import org.example.taskflowd.domain.dashboard.dto.ActivityResponse;
+import org.example.taskflowd.domain.dashboard.dto.MyTasksSummaryResponse;
+import org.example.taskflowd.domain.dashboard.dto.TeamProgressResponse;
+import org.example.taskflowd.domain.dashboard.mock.entity.Activity;
+import org.example.taskflowd.domain.dashboard.mock.entity.Team;
+import org.example.taskflowd.domain.dashboard.mock.repository.ActivityRepositoryMock;
+import org.example.taskflowd.domain.dashboard.mock.repository.TeamMemberRepositoryMock;
+import org.example.taskflowd.domain.dashboard.mock.repository.TeamRepositoryMock;
+import org.example.taskflowd.domain.task.entity.Task;
+import org.example.taskflowd.domain.task.enums.TaskStatus;
+import org.example.taskflowd.domain.task.repository.TaskRepository;
+import org.example.taskflowd.domain.user.entity.User;
+import org.example.taskflowd.domain.user.service.UserService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.data.domain.*;
+
+import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.*;
+
+class DashboardServiceTest {
+
+	@Mock private TaskRepository taskRepository;
+	@Mock private ActivityRepositoryMock activityRepository;
+	@Mock private TeamRepositoryMock teamRepository;
+	@Mock private TeamMemberRepositoryMock teamMemberRepository;
+	@Mock private UserService userService;
+
+	@InjectMocks
+	private DashboardService dashboardService;
+
+	private final Long userId = 1L;
+
+	@BeforeEach
+	void setUp() {
+		MockitoAnnotations.openMocks(this);
+	}
+
+	@Test
+	@DisplayName("오늘 예정된 작업 요약 조회 - 정상 동작")
+	void 오늘_예정_미완료_작업_요약_조회() {
+		// Given
+		LocalDateTime now = LocalDateTime.now();
+		User testUser = new User("테스트", "testuser", "test@example.com", "password");
+		
+		Task todayTask = Task.builder()
+			.title("오늘 할 일")
+			.description("오늘 해야 할 작업")
+			.writer(testUser)
+			.assignee(testUser)
+			.status(TaskStatus.TODO)
+			.dueDate(now)
+			.build();
+
+		Task upcomingTask = Task.builder()
+			.title("다가올 할 일")
+			.description("다가올 작업")
+			.writer(testUser)
+			.assignee(testUser)
+			.status(TaskStatus.TODO)
+			.dueDate(now.plusDays(2))
+			.build();
+
+		Task overdueTask = Task.builder()
+			.title("기한 지난 일")
+			.description("기한이 지난 작업")
+			.writer(testUser)
+			.assignee(testUser)
+			.status(TaskStatus.TODO)
+			.dueDate(now.minusDays(2))
+			.build();
+
+		when(taskRepository.findByAssigneeIdAndDueDateBetween(anyLong(), any(), any()))
+			.thenReturn(List.of(todayTask));
+
+		when(taskRepository.findByAssigneeIdAndDueDateAfter(anyLong(), any()))
+			.thenReturn(List.of(upcomingTask));
+
+		when(taskRepository.findByAssigneeIdAndDueDateBefore(anyLong(), any()))
+			.thenReturn(List.of(overdueTask));
+
+		// When
+		MyTasksSummaryResponse response = dashboardService.getMyTasksSummary(userId)
+		;
+
+		// Then
+		assertThat(response.todayTasks()).hasSize(1);
+		assertThat(response.todayTasks().get(0).title()).isEqualTo("오늘 할 일");
+		assertThat(response.upcomingTasks()).hasSize(1);
+		assertThat(response.upcomingTasks().get(0).title()).isEqualTo("다가올 할 일");
+		assertThat(response.overdueTasks()).hasSize(1);
+		assertThat(response.overdueTasks().get(0).title()).isEqualTo("기한 지난 일");
+
+		verify(taskRepository, times(1)).findByAssigneeIdAndDueDateBetween(eq(userId), any(), any());
+		verify(taskRepository, times(1)).findByAssigneeIdAndDueDateAfter(eq(userId), any());
+		verify(taskRepository, times(1)).findByAssigneeIdAndDueDateBefore(eq(userId), any());
+	}
+
+	@Test
+	@DisplayName("팀 진행률 계산 - 정상 동작")
+	void 팀_진행률_계산_정상동작() {
+		// Given
+		Team team = new Team();
+		team.setId(10L);
+		team.setName("개발팀");
+
+		when(teamRepository.findTeamsByUserId(userId)).thenReturn(List.of(team));
+
+		List<Object[]> stats = new java.util.ArrayList<>();
+		stats.add(new Object[]{ "개발팀", 10L, 5L });
+		when(teamMemberRepository.getTeamProgressStats(anyList())).thenReturn(stats);
+
+		// When
+		TeamProgressResponse response = dashboardService.getTeamProgress(userId);
+
+		// Then
+		assertThat(response.teamProgress()).containsEntry("개발팀", 50);
+		assertThat(response.teamProgress()).hasSize(1);
+
+		verify(teamRepository, times(1)).findTeamsByUserId(userId);
+		verify(teamMemberRepository, times(1)).getTeamProgressStats(List.of(10L));
+	}
+
+	@Test
+	@DisplayName("팀이 없을 때 모의 데이터 반환")
+	void 팀이_없을때_모의데이터_반환() {
+		// Given
+		when(teamRepository.findTeamsByUserId(userId)).thenReturn(Collections.emptyList());
+
+		// When
+		TeamProgressResponse response = dashboardService.getTeamProgress(userId);
+
+		// Then
+		assertThat(response.teamProgress()).isNotEmpty();
+		assertThat(response.teamProgress()).containsKeys("개발팀", "디자인팀", "QA팀");
+		assertThat(response.teamProgress()).containsEntry("개발팀", 75);
+		assertThat(response.teamProgress()).containsEntry("디자인팀", 60);
+		assertThat(response.teamProgress()).containsEntry("QA팀", 85);
+
+		verify(teamRepository, times(1)).findTeamsByUserId(userId);
+		verify(teamMemberRepository, never()).getTeamProgressStats(anyList());
+	}
+
+	@Test
+	@DisplayName("활동 내역 조회 - Page 매핑 정상 동작")
+	void 활동내역_조회시_Page_매핑_정상동작() {
+		// Given
+		User user = new User("테스트", "testuser", "test@example.com", "password");
+
+		Activity activity = new Activity();
+		activity.setId(1L);
+		activity.setUser(user);
+		activity.setAction("CREATE");
+		activity.setTargetType("TASK");
+		activity.setTargetId(101L);
+		activity.setDescription("새 작업 생성");
+		activity.setCreatedAt(LocalDateTime.now());
+
+		Pageable pageable = PageRequest.of(0, 10, Sort.by("createdAt").descending());
+		Page<Activity> page = new PageImpl<>(List.of(activity), pageable, 1);
+
+		when(activityRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable))
+			.thenReturn(page);
+
+		// When
+		Page<ActivityResponse> response = dashboardService.getActivities(userId, pageable);
+
+		// Then
+		assertThat(response).hasSize(1);
+		assertThat(response.getContent().get(0).action()).isEqualTo("CREATE");
+		assertThat(response.getContent().get(0).targetType()).isEqualTo("TASK");
+		assertThat(response.getContent().get(0).description()).isEqualTo("새 작업 생성");
+
+		verify(activityRepository, times(1)).findByUserIdOrderByCreatedAtDesc(userId, pageable);
+	}
+
+	@Test
+	@DisplayName("작업 요약 조회 - 완료된 작업은 제외")
+	void 작업_요약_조회_완료된_작업_제외() {
+		// Given
+		LocalDateTime now = LocalDateTime.now();
+		User testUser = new User("테스트", "testuser", "test@example.com", "password");
+		
+		Task completedTask = Task.builder()
+			.title("완료된 작업")
+			.description("완료된 작업 설명")
+			.writer(testUser)
+			.assignee(testUser)
+			.status(TaskStatus.COMPLETE)
+			.dueDate(now.plusDays(1))
+			.build();
+
+		Task pendingTask = Task.builder()
+			.title("진행 중인 작업")
+			.description("진행 중인 작업 설명")
+			.writer(testUser)
+			.assignee(testUser)
+			.status(TaskStatus.IN_PROGRESS)
+			.dueDate(now.plusDays(1))
+			.build();
+
+		when(taskRepository.findByAssigneeIdAndDueDateBetween(anyLong(), any(), any()))
+			.thenReturn(Collections.emptyList());
+
+		when(taskRepository.findByAssigneeIdAndDueDateAfter(anyLong(), any()))
+			.thenReturn(List.of(completedTask, pendingTask));
+
+		when(taskRepository.findByAssigneeIdAndDueDateBefore(anyLong(), any()))
+			.thenReturn(Collections.emptyList());
+
+		// When
+		MyTasksSummaryResponse response = dashboardService.getMyTasksSummary(userId);
+
+		// Then
+		assertThat(response.upcomingTasks()).hasSize(1);
+		assertThat(response.upcomingTasks().get(0).title()).isEqualTo("진행 중인 작업");
+		assertThat(response.upcomingTasks().get(0).status()).isEqualTo(TaskStatus.IN_PROGRESS.getCode());
+	}
+
+	@Test
+	@DisplayName("팀 진행률 계산 - 여러 팀")
+	void 팀_진행률_계산_여러팀() {
+		// Given
+		Team team1 = new Team();
+		team1.setId(10L);
+		team1.setName("개발팀");
+
+		Team team2 = new Team();
+		team2.setId(20L);
+		team2.setName("디자인팀");
+
+		when(teamRepository.findTeamsByUserId(userId)).thenReturn(List.of(team1, team2));
+
+		List<Object[]> stats = new java.util.ArrayList<>();
+		stats.add(new Object[]{ "개발팀", 10L, 8L });
+		stats.add(new Object[]{ "디자인팀", 5L, 3L });
+		when(teamMemberRepository.getTeamProgressStats(anyList())).thenReturn(stats);
+
+		// When
+		TeamProgressResponse response = dashboardService.getTeamProgress(userId);
+
+		// Then
+		assertThat(response.teamProgress()).containsEntry("개발팀", 80);
+		assertThat(response.teamProgress()).containsEntry("디자인팀", 60);
+		assertThat(response.teamProgress()).hasSize(2);
+	}
+
+	@Test
+	@DisplayName("활동 내역 조회 - 빈 결과")
+	void 활동내역_조회_빈결과() {
+		// Given
+		Pageable pageable = PageRequest.of(0, 10, Sort.by("createdAt").descending());
+		Page<Activity> emptyPage = new PageImpl<>(Collections.emptyList(), pageable, 0);
+
+		when(activityRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable))
+			.thenReturn(emptyPage);
+
+		// When
+		Page<ActivityResponse> response = dashboardService.getActivities(userId, pageable);
+
+		// Then
+		assertThat(response).isEmpty();
+		assertThat(response.getTotalElements()).isEqualTo(0);
+
+		verify(activityRepository, times(1)).findByUserIdOrderByCreatedAtDesc(userId, pageable);
+	}
+
+	@Test
+	@DisplayName("작업 요약 조회 - 모든 카테고리 빈 결과")
+	void 작업_요약_조회_모든_카테고리_빈결과() {
+		// Given
+		when(taskRepository.findByAssigneeIdAndDueDateBetween(anyLong(), any(), any()))
+			.thenReturn(Collections.emptyList());
+
+		when(taskRepository.findByAssigneeIdAndDueDateAfter(anyLong(), any()))
+			.thenReturn(Collections.emptyList());
+
+		when(taskRepository.findByAssigneeIdAndDueDateBefore(anyLong(), any()))
+			.thenReturn(Collections.emptyList());
+
+		// When
+		MyTasksSummaryResponse response = dashboardService.getMyTasksSummary(userId);
+
+		// Then
+		assertThat(response.todayTasks()).isEmpty();
+		assertThat(response.upcomingTasks()).isEmpty();
+		assertThat(response.overdueTasks()).isEmpty();
+
+		verify(taskRepository, times(1)).findByAssigneeIdAndDueDateBetween(eq(userId), any(), any());
+		verify(taskRepository, times(1)).findByAssigneeIdAndDueDateAfter(eq(userId), any());
+		verify(taskRepository, times(1)).findByAssigneeIdAndDueDateBefore(eq(userId), any());
+	}
+}
