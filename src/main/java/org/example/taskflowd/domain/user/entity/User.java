@@ -20,16 +20,22 @@ public class User extends BaseEntity {
     private Long id;
 
     @Column(unique = true)
+    private String name;
+
+    @Column(unique = true)
     private String userName;
 
     @Column(unique = true)
     private String email;
 
+    private String role = "USER";   // 임시 조치, enum 변환 필요
+
     private String password;
 
 
     // 일반 생성자
-    public User(String userName, String email, String password) {
+    public User(String name, String userName, String email, String password) {
+        this.name = name;
         this.userName = userName;
         this.email = email;
         this.password = password;

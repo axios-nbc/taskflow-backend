@@ -1,19 +1,25 @@
 spring:
-  datasource:
-    url: jdbc:mysql://localhost:3306/${DB_NAME}
-    username: ${USER_NAME}
-    password: ${PASSWORD}
-    driver-class-name: com.mysql.cj.jdbc.Driver
-  jpa:
-    hibernate:
-      ddl-auto: update
-    properties:
-      hibernate:
-        show_sql: true
-        format_sql: true
+  application:
+    name: taskflow
+  profiles:
+    active: dev
 
-jwt:
-  secret:
-    key:  "xt/S0ffqB5ldIkAWtJrB1PfcuBf17La0xPNN/l6oWIQXSOYHeOxMYXMgJEq+vlIytCnImotMBDKyHThFL8jVQg=="
+## "application-dev.yml" 파일을 추가해서 사용하면 됩니다 ->
 
-debug: true
+#spring:
+#  datasource:
+#    url: jdbc:mysql://localhost:3306/${DB_NAME}
+#    username: ${USER_NAME}
+#    password: ${PASSWORD}
+#    driver-class-name: com.mysql.cj.jdbc.Driver
+#  jpa:
+#    hibernate:
+#      ddl-auto: update
+#    properties:
+#      hibernate:
+#        show_sql: true
+#        format_sql: true
+#
+#jwt:
+#  secret:
+#    key: {SECRET_KEY}

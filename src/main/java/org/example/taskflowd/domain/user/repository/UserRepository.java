@@ -12,7 +12,7 @@ import java.util.Optional;
  */
 
 public interface UserRepository extends JpaRepository<User, Long> {
-    Optional<User> findByEmailAndDeletedAtIsNull(String email);
+    Optional<User> findByUserNameAndDeletedAtIsNull(String userName);
     //이메일 중복 체크
     boolean existsByEmail(String email);
     //사용자 이름 중복 체크

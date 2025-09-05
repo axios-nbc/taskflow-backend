@@ -1,4 +1,4 @@
-package org.example.taskflowd.domain.auth.jwt;
+package org.example.taskflowd.common.security;
 
 
 import io.jsonwebtoken.Claims;
@@ -7,10 +7,10 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
@@ -18,9 +18,12 @@ import java.util.ArrayList;
 import java.util.Date;
 
 @Component
+@RequiredArgsConstructor
 public class JwtProvider {
 
     private static final long JWT_EXPIRATION = 1000 * 60 * 60; // 1시간
+
+    private final JwtUserService jwtUserService;
 
     @Value("${jwt.secret.key}")
     private String secretKey;
@@ -48,10 +51,8 @@ public class JwtProvider {
     public Authentication getAuthentication(String token) {
         String username = getClaims(token).getSubject();
 
-
-        // User 객체 생성
-        User principal = new User(username, "", new ArrayList<>());
-        return new UsernamePasswordAuthenticationToken(principal, token, principal.getAuthorities());
+        AuthUser authUser = jwtUserService.findUserById(Long.parseLong(username));
+        return new UsernamePasswordAuthenticationToken(authUser, null, new ArrayList<>());
     }
 
 

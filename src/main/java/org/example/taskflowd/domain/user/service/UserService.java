@@ -3,6 +3,7 @@ package org.example.taskflowd.domain.user.service;
 import org.example.taskflowd.domain.user.dto.request.UserSaveRequestDto;
 import org.example.taskflowd.domain.user.dto.request.UserUpdateRequestDto;
 import org.example.taskflowd.domain.user.dto.request.LoginRequestDto;
+import org.example.taskflowd.domain.user.dto.response.LoginResponseDto;
 import org.example.taskflowd.domain.user.dto.response.UserResponseDto;
 import org.example.taskflowd.domain.user.entity.User;
 
@@ -25,7 +26,7 @@ public interface UserService {
     //회원탈퇴
     void deleteById(Long id, String password);
     //로그인 처리 및 JWT 발급
-    String handleLogin(LoginRequestDto dto);
+    LoginResponseDto handleLogin(LoginRequestDto dto);
     //권한 검증
     User getUser(Long userId);
 

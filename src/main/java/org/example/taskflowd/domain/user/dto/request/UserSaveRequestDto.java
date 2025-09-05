@@ -14,9 +14,13 @@ import lombok.Getter;
 @Getter
 public class UserSaveRequestDto {
 
-    @NotBlank(message = "유저명은 필수 입력값입니다.")
-    @Size(min = 4, max = 20, message = "유저명은 4글자 이상, 20글자 이내여야 합니다.")
-    private String userName;
+    @NotBlank(message = "이름은 필수 입력값입니다.")
+    @Size(min = 2, max = 50, message = "이름은 2글자 이상, 50글자 이내여야 합니다.")
+    private String name;
+
+    @NotBlank(message = "아이디는 필수 입력값입니다.")
+    @Size(min = 4, max = 20, message = "아이디는 4글자 이상, 20글자 이내여야 합니다.")
+    private String username;
 
     @NotBlank(message = "이메일은 필수 입력값입니다.")
     @Pattern(regexp = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$", message = "유효한 이메일 형식이 아닙니다.")

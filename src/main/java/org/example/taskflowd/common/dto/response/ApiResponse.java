@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Getter
 public class ApiResponse<T> {
 
     private final boolean success;
