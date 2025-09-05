@@ -5,6 +5,11 @@ import org.example.taskflowd.domain.dashboard.dto.ActivityResponse;
 import org.example.taskflowd.domain.dashboard.dto.MyTasksSummaryResponse;
 import org.example.taskflowd.domain.dashboard.dto.TaskSummary;
 import org.example.taskflowd.domain.dashboard.dto.TeamProgressResponse;
+import org.example.taskflowd.domain.dashboard.mock.entity.Activity;
+import org.example.taskflowd.domain.dashboard.mock.entity.Team;
+import org.example.taskflowd.domain.dashboard.mock.repository.ActivityRepositoryMock;
+import org.example.taskflowd.domain.dashboard.mock.repository.TeamMemberRepositoryMock;
+import org.example.taskflowd.domain.dashboard.mock.repository.TeamRepositoryMock;
 import org.example.taskflowd.domain.task.entity.Task;
 import org.example.taskflowd.domain.task.enums.TaskStatus;
 import org.example.taskflowd.domain.task.repository.TaskRepository;
@@ -28,9 +33,9 @@ import java.util.stream.Collectors;
 public class DashboardService {
 
 	private final TaskRepository taskRepository;
-	// private final ActivityRepository activityRepository;
-	// private final TeamRepository teamRepository;
-	// private final TeamMemberRepository teamMemberRepository;
+	private final ActivityRepositoryMock activityRepository;
+	private final TeamRepositoryMock teamRepository;
+	private final TeamMemberRepositoryMock teamMemberRepository;
 	private final UserService userService;
 
 	public MyTasksSummaryResponse getMyTasksSummary(Long userId) {
@@ -48,7 +53,7 @@ public class DashboardService {
 		List<TaskSummary> upcomingTasks = taskRepository.findByAssigneeIdAndDueDateAfter(userId, tomorrow)
 			.stream()
 			.filter(task -> !task.getStatus().equals(TaskStatus.COMPLETE))
-			.limit(5) // 최대 5개만
+			.limit(5)
 			.map(this::toTaskSummary)
 			.collect(Collectors.toList());
 
@@ -80,6 +85,11 @@ public class DashboardService {
 
 				teamProgress.put(teamName, progressPercentage);
 			}
+		} else {
+			// Mock 데이터 - 팀 기능이 없을 때 샘플 데이터 제공
+			teamProgress.put("개발팀", 75);
+			teamProgress.put("디자인팀", 60);
+			teamProgress.put("QA팀", 85);
 		}
 
 		return TeamProgressResponse.of(teamProgress);
@@ -90,8 +100,8 @@ public class DashboardService {
 
 		return activities.map(activity -> ActivityResponse.of(
 			activity.getId(),
-			activity.getUser().getId(),
-			UserMapper.toResponseDto(activity.getUser()),
+			activity.getUser() != null ? activity.getUser().getId() : userId,
+			activity.getUser() != null ? UserMapper.toResponseDto(activity.getUser()) : null,
 			activity.getAction(),
 			activity.getTargetType(),
 			activity.getTargetId(),
