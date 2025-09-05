@@ -2,6 +2,11 @@ package org.example.taskflowd.domain.dashboard.controller;
 
 import org.example.taskflowd.common.dto.response.ApiPageResponse;
 import org.example.taskflowd.common.dto.response.ApiResponse;
+import org.example.taskflowd.common.enums.ResponseMessage;
+import org.example.taskflowd.domain.dashboard.dto.ActivityResponse;
+import org.example.taskflowd.domain.dashboard.dto.MyTasksSummaryResponse;
+import org.example.taskflowd.domain.dashboard.dto.TeamProgressResponse;
+import org.example.taskflowd.domain.dashboard.service.DashboardService;
 import org.example.taskflowd.domain.user.entity.User;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -25,11 +30,11 @@ public class DashboardController {
 	private final DashboardService dashboardService;
 
 	@GetMapping("/my-tasks")
-	public ResponseEntity<ApiResponse> getMyTasksSummary(
+	public ResponseEntity<ApiResponse<MyTasksSummaryResponse>> getMyTasksSummary(
 		@AuthenticationPrincipal User principal) {
 		Long userId = Long.parseLong(principal.getUserName());
 		MyTasksSummaryResponse summary = dashboardService.getMyTasksSummary(userId);
-		return ApiResponse.ok("내 작업 요약 조회 완료", summary);
+		return ApiResponse.ok(ResponseMessage.MY_TASKS_SUMMARY_INQUIRE, summary);
 	}
 
 	@GetMapping("/team-progress")
@@ -37,7 +42,7 @@ public class DashboardController {
 		@AuthenticationPrincipal User principal) {
 		Long userId = Long.parseLong(principal.getUserName());
 		TeamProgressResponse progress = dashboardService.getTeamProgress(userId);
-		return ApiResponse.ok("팀 진행률 조회 완료", progress);
+		return ApiResponse.ok(ResponseMessage.TEAM_PROGRESS_INQUIRE, progress);
 	}
 
 	@GetMapping("/activities")
@@ -46,7 +51,7 @@ public class DashboardController {
 		@RequestParam(required = false, defaultValue = "0") int page,
 		@RequestParam(required = false, defaultValue = "10") int size) {
 
-		Long userId = Long.parseLong(principal.getUsername());
+		Long userId = Long.parseLong(principal.getUserName());
 		Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
 
 		return ApiPageResponse.success(dashboardService.getActivities(userId, pageable));
