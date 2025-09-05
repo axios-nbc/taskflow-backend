@@ -1,19 +1,16 @@
 package org.example.taskflowd.domain.task.controller;
 
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.taskflowd.common.dto.response.ApiPageResponse;
 import org.example.taskflowd.common.dto.response.ApiResponse;
-import org.example.taskflowd.common.enums.ResponseMessage;
 import org.example.taskflowd.domain.task.dto.request.TaskCreateRequest;
 import org.example.taskflowd.domain.task.dto.request.TaskStatusUpdateRequest;
 import org.example.taskflowd.domain.task.dto.request.TaskUpdateRequest;
 import org.example.taskflowd.domain.task.dto.response.*;
 import org.example.taskflowd.domain.task.entity.Task;
+import org.example.taskflowd.domain.task.enums.TaskResponseMessage;
 import org.example.taskflowd.domain.task.service.TaskExternalService;
-import org.example.taskflowd.domain.user.entity.User;
-import org.example.taskflowd.domain.user.service.UserService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -38,9 +35,8 @@ public class TaskController {
     public ResponseEntity<ApiResponse<TaskCreateResponse>> createTask(
             @Validated @RequestBody TaskCreateRequest request,
             @SessionAttribute(value = "LOGIN_USER_ID") Long loginUserId) {
-        // TODO : ApiResponse created 메소드 변경, ResponseMessage Interface로 Refactoring
         return ApiResponse.created(
-                ResponseMessage.TASK_CREATED,
+                TaskResponseMessage.TASK_CREATED,
                 taskExternalService.createTask(request, loginUserId),
                 null);
     }

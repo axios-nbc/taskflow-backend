@@ -3,17 +3,14 @@ package org.example.taskflowd.domain.comment.controller;
 import lombok.RequiredArgsConstructor;
 import org.example.taskflowd.common.dto.response.ApiPageResponse;
 import org.example.taskflowd.common.dto.response.ApiResponse;
-import org.example.taskflowd.common.enums.ResponseMessage;
 import org.example.taskflowd.domain.comment.dto.request.CreateCommentRequest;
 import org.example.taskflowd.domain.comment.dto.request.UpdateCommentRequest;
 import org.example.taskflowd.domain.comment.dto.response.CommentListItemResponse;
 import org.example.taskflowd.domain.comment.dto.response.CreateCommentResponse;
 import org.example.taskflowd.domain.comment.dto.response.UpdateCommentResponse;
 import org.example.taskflowd.domain.comment.entity.Comment;
+import org.example.taskflowd.domain.comment.enums.CommentResponseMessage;
 import org.example.taskflowd.domain.comment.service.CommentExternalService;
-import org.example.taskflowd.domain.task.dto.response.TaskListItemResponse;
-import org.example.taskflowd.domain.task.entity.Task;
-import org.example.taskflowd.domain.task.service.TaskExternalService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -37,7 +34,7 @@ public class CommentController {
             @Validated @RequestBody CreateCommentRequest createCommentRequest,
             @PathVariable Long taskId) {
         return ApiResponse.created(
-                ResponseMessage.COMMENT_CREATED,
+                CommentResponseMessage.COMMENT_CREATED,
                 commentExternalService.createComment(createCommentRequest, taskId, loginUserId),
                 null
         );
