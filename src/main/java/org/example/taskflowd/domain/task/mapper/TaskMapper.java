@@ -10,13 +10,14 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class TaskMapper {
-    public Task toEntity(TaskCreateRequest taskCreateRequest, User assignee) {
+    public Task toEntity(TaskCreateRequest taskCreateRequest, User writer, User assignee) {
         return Task.builder().
                 title(taskCreateRequest.title()).
                 description(taskCreateRequest.description()).
+                writer(writer).
+                assignee(assignee).
                 dueDate(taskCreateRequest.dueDate()).
                 priority(taskCreateRequest.priority()).
-                assignee(assignee).
                 build();
     }
 
