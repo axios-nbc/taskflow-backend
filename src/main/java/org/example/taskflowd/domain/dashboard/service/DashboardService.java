@@ -14,7 +14,6 @@ import org.example.taskflowd.domain.task.entity.Task;
 import org.example.taskflowd.domain.task.enums.TaskStatus;
 import org.example.taskflowd.domain.task.repository.TaskRepository;
 import org.example.taskflowd.domain.user.dto.mapper.UserMapper;
-import org.example.taskflowd.domain.user.service.UserService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -36,7 +35,6 @@ public class DashboardService {
 	private final ActivityRepositoryMock activityRepository;
 	private final TeamRepositoryMock teamRepository;
 	private final TeamMemberRepositoryMock teamMemberRepository;
-	private final UserService userService;
 
 	public MyTasksSummaryResponse getMyTasksSummary(Long userId) {
 		LocalDateTime today = LocalDateTime.now();
