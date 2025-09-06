@@ -12,7 +12,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -143,4 +142,16 @@ public interface TaskRepository extends JpaRepository<Task, Long>, JpaSpecificat
        Page<Task> findByAssigneeIdAndPriority(Long assigneeId, TaskPriority priority, Pageable pageable);
 
        Page<Task> findByAssigneeIdAndStatusAndPriority(Long assigneeId, TaskStatus status, TaskPriority priority, Pageable pageable);
+
+       long countByAssigneeIdAndDeletedAtIsNull(Long assigneeId);
+
+	   long countByAssigneeIdAndStatusAndDeletedAtIsNull(Long assigneeId, TaskStatus status);
+
+	   long countByAssigneeIdAndDueDateBeforeAndStatusNotAndDeletedAtIsNull(Long assigneeId,
+			LocalDateTime before,
+			TaskStatus status);
+
+	    long countByAssigneeIdAndDueDateBetweenAndDeletedAtIsNull(Long assigneeId,
+			LocalDateTime start,
+			LocalDateTime end);
 }

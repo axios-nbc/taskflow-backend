@@ -4,6 +4,7 @@ import org.example.taskflowd.common.dto.response.ApiPageResponse;
 import org.example.taskflowd.common.dto.response.ApiResponse;
 import org.example.taskflowd.common.enums.ResponseMessage;
 import org.example.taskflowd.domain.dashboard.dto.ActivityResponse;
+import org.example.taskflowd.domain.dashboard.dto.DashboardStatsResponse;
 import org.example.taskflowd.domain.dashboard.dto.MyTasksSummaryResponse;
 import org.example.taskflowd.domain.dashboard.dto.TeamProgressResponse;
 import org.example.taskflowd.domain.dashboard.service.DashboardService;
@@ -33,7 +34,7 @@ public class DashboardController {
 	public ResponseEntity<ApiResponse<DashboardStatsResponse>> getStats(
 		@AuthenticationPrincipal User principal) {
 		Long userId = Long.parseLong(principal.getUserName());
-		var stats = dashboardService.getStats(userId);
+		DashboardStatsResponse stats = dashboardService.getStats(userId);
 		return ApiResponse.ok(ResponseMessage.DASHBOARD_STATS_INQUIRE, stats);
 	}
 
