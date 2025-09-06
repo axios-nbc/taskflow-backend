@@ -65,7 +65,7 @@ public class DashboardService {
 
 	public TeamProgressResponse getTeamProgress(Long userId) {
 		List<TeamMember> memberships = teamMemberRepository.findByUserId(userId);
-		List<Long> teamIds = memberships.stream().map(m -> m.getTeam().getId()).collect(Collectors.toList());
+		List<Long> teamIds = memberships.stream().map(m -> m.getTeam().getId()).toList();
 
 		Map<String, Integer> teamProgress = new HashMap<>();
 
