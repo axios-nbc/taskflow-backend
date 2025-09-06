@@ -4,13 +4,13 @@ import org.example.taskflowd.domain.dashboard.dto.ActivityResponse;
 import org.example.taskflowd.domain.dashboard.dto.MyTasksSummaryResponse;
 import org.example.taskflowd.domain.dashboard.dto.TeamProgressResponse;
 import org.example.taskflowd.domain.dashboard.mock.entity.Activity;
-import org.example.taskflowd.domain.dashboard.mock.entity.Team;
 import org.example.taskflowd.domain.dashboard.mock.repository.ActivityRepositoryMock;
-import org.example.taskflowd.domain.dashboard.mock.repository.TeamMemberRepositoryMock;
-import org.example.taskflowd.domain.dashboard.mock.repository.TeamRepositoryMock;
 import org.example.taskflowd.domain.task.entity.Task;
 import org.example.taskflowd.domain.task.enums.TaskStatus;
 import org.example.taskflowd.domain.task.repository.TaskRepository;
+import org.example.taskflowd.domain.team.entity.Team;
+import org.example.taskflowd.domain.team.entity.TeamMember;
+import org.example.taskflowd.domain.team.repository.TeamMemberRepository;
 import org.example.taskflowd.domain.user.entity.User;
 import org.example.taskflowd.domain.user.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,14 +26,14 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 class DashboardServiceTest {
 
 	@Mock private TaskRepository taskRepository;
 	@Mock private ActivityRepositoryMock activityRepository;
-	@Mock private TeamRepositoryMock teamRepository;
-	@Mock private TeamMemberRepositoryMock teamMemberRepository;
+	@Mock private TeamMemberRepository teamMemberRepository;
 	@Mock private UserService userService;
 
 	@InjectMocks
@@ -110,11 +110,12 @@ class DashboardServiceTest {
 	@DisplayName("팀 진행률 계산 - 정상 동작")
 	void 팀_진행률_계산_정상동작() {
 		// Given
-		Team team = new Team();
-		team.setId(10L);
-		team.setName("개발팀");
-
-		when(teamRepository.findTeamsByUserId(userId)).thenReturn(List.of(team));
+		TeamMember membership = mock(TeamMember.class);
+		Team team = mock(Team.class);
+		when(team.getId()).thenReturn(10L);
+		when(team.getName()).thenReturn("개발팀");
+		when(membership.getTeam()).thenReturn(team);
+		when(teamMemberRepository.findByUserId(userId)).thenReturn(List.of(membership));
 
 		List<Object[]> stats = new java.util.ArrayList<>();
 		stats.add(new Object[]{ "개발팀", 10L, 5L });
@@ -127,7 +128,7 @@ class DashboardServiceTest {
 		assertThat(response.teamProgress()).containsEntry("개발팀", 50);
 		assertThat(response.teamProgress()).hasSize(1);
 
-		verify(teamRepository, times(1)).findTeamsByUserId(userId);
+		verify(teamMemberRepository, times(1)).findByUserId(userId);
 		verify(teamMemberRepository, times(1)).getTeamProgressStats(List.of(10L));
 	}
 
@@ -135,7 +136,7 @@ class DashboardServiceTest {
 	@DisplayName("팀이 없을 때 모의 데이터 반환")
 	void 팀이_없을때_모의데이터_반환() {
 		// Given
-		when(teamRepository.findTeamsByUserId(userId)).thenReturn(Collections.emptyList());
+		when(teamMemberRepository.findByUserId(userId)).thenReturn(Collections.emptyList());
 
 		// When
 		TeamProgressResponse response = dashboardService.getTeamProgress(userId);
@@ -147,7 +148,7 @@ class DashboardServiceTest {
 		assertThat(response.teamProgress()).containsEntry("디자인팀", 60);
 		assertThat(response.teamProgress()).containsEntry("QA팀", 85);
 
-		verify(teamRepository, times(1)).findTeamsByUserId(userId);
+		verify(teamMemberRepository, times(1)).findByUserId(userId);
 		verify(teamMemberRepository, never()).getTeamProgressStats(anyList());
 	}
 
@@ -231,15 +232,17 @@ class DashboardServiceTest {
 	@DisplayName("팀 진행률 계산 - 여러 팀")
 	void 팀_진행률_계산_여러팀() {
 		// Given
-		Team team1 = new Team();
-		team1.setId(10L);
-		team1.setName("개발팀");
-
-		Team team2 = new Team();
-		team2.setId(20L);
-		team2.setName("디자인팀");
-
-		when(teamRepository.findTeamsByUserId(userId)).thenReturn(List.of(team1, team2));
+		TeamMember m1 = mock(TeamMember.class);
+		TeamMember m2 = mock(TeamMember.class);
+		Team t1 = mock(Team.class);
+		Team t2 = mock(Team.class);
+		when(t1.getId()).thenReturn(10L);
+		when(t1.getName()).thenReturn("개발팀");
+		when(t2.getId()).thenReturn(20L);
+		when(t2.getName()).thenReturn("디자인팀");
+		when(m1.getTeam()).thenReturn(t1);
+		when(m2.getTeam()).thenReturn(t2);
+		when(teamMemberRepository.findByUserId(userId)).thenReturn(List.of(m1, m2));
 
 		List<Object[]> stats = new java.util.ArrayList<>();
 		stats.add(new Object[]{ "개발팀", 10L, 8L });

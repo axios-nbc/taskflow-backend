@@ -66,8 +66,11 @@ public class SearchController {
 	private Pageable createPageable(int page, int size, String sortBy, String sortDir) {
 		Sort.Direction direction = "desc".equalsIgnoreCase(sortDir) ? 
 			Sort.Direction.DESC : Sort.Direction.ASC;
-		
-		Sort sort = Sort.by(direction, sortBy);
+		String safe = switch (sortBy) {
+			case "updatedAt", "dueDate", "createdAt", "priority", "title" -> sortBy;
+			default -> "updatedAt";
+		};
+		Sort sort = Sort.by(direction, safe);
 		return PageRequest.of(page, size, sort);
 	}
 }

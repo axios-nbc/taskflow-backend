@@ -9,6 +9,8 @@ import org.example.taskflowd.domain.task.dto.response.TaskListItemResponse;
 import org.example.taskflowd.domain.task.entity.Task;
 import org.example.taskflowd.domain.task.repository.TaskRepository;
 import org.example.taskflowd.domain.user.dto.mapper.UserMapper;
+import org.example.taskflowd.domain.user.repository.UserRepository;
+import org.example.taskflowd.domain.team.repository.TeamRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -28,6 +30,8 @@ import java.util.stream.Collectors;
 public class SearchService {
 
 	private final TaskRepository taskRepository;
+	private final UserRepository userRepository;
+	private final TeamRepository teamRepository;
 
 	public IntegratedSearchResponse integratedSearch(String query, Long userId) {
 		List<TaskSearchResult> tasks = searchTasksInternal(query, userId)
@@ -35,8 +39,16 @@ public class SearchService {
 			.map(this::toTaskSearchResult)
 			.collect(Collectors.toList());
 
-		List<UserSearchResult> users = Collections.emptyList();
-		List<TeamSearchResult> teams = Collections.emptyList();
+		List<UserSearchResult> users = !StringUtils.hasText(query)
+			? Collections.emptyList()
+			: userRepository.searchUsers(query, PageRequest.of(0, 10)).stream()
+				.map(u -> UserSearchResult.of(u.getId(), u.getUserName(), u.getName(), u.getEmail()))
+				.collect(Collectors.toList());
+		List<TeamSearchResult> teams = !StringUtils.hasText(query)
+			? Collections.emptyList()
+			: teamRepository.searchTeams(query, PageRequest.of(0, 10)).stream()
+				.map(t -> TeamSearchResult.of(t.getId(), t.getName(), t.getDescription()))
+				.collect(Collectors.toList());
 
 		return IntegratedSearchResponse.of(tasks, users, teams);
 	}
