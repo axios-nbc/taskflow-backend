@@ -7,10 +7,9 @@ import org.example.taskflowd.domain.dashboard.dto.MyTasksSummaryResponse;
 import org.example.taskflowd.domain.dashboard.dto.TaskSummary;
 import org.example.taskflowd.domain.dashboard.dto.TeamProgressResponse;
 import org.example.taskflowd.domain.dashboard.mock.entity.Activity;
-import org.example.taskflowd.domain.dashboard.mock.entity.Team;
 import org.example.taskflowd.domain.dashboard.mock.repository.ActivityRepositoryMock;
-import org.example.taskflowd.domain.dashboard.mock.repository.TeamMemberRepositoryMock;
-import org.example.taskflowd.domain.dashboard.mock.repository.TeamRepositoryMock;
+import org.example.taskflowd.domain.team.entity.TeamMember;
+import org.example.taskflowd.domain.team.repository.TeamMemberRepository;
 import org.example.taskflowd.domain.task.entity.Task;
 import org.example.taskflowd.domain.task.enums.TaskStatus;
 import org.example.taskflowd.domain.task.repository.TaskRepository;
@@ -20,7 +19,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.HashMap;
@@ -35,8 +33,7 @@ public class DashboardService {
 
 	private final TaskRepository taskRepository;
 	private final ActivityRepositoryMock activityRepository;
-	private final TeamRepositoryMock teamRepository;
-	private final TeamMemberRepositoryMock teamMemberRepository;
+	private final TeamMemberRepository teamMemberRepository;
 
 	public MyTasksSummaryResponse getMyTasksSummary(Long userId) {
 		LocalDateTime today = LocalDateTime.now();
@@ -67,25 +64,12 @@ public class DashboardService {
 	}
 
 	public TeamProgressResponse getTeamProgress(Long userId) {
-		List<Team> userTeams = teamRepository.findTeamsByUserId(userId);
-		List<Long> teamIds = userTeams.stream().map(Team::getId).collect(Collectors.toList());
+		List<TeamMember> memberships = teamMemberRepository.findByUserId(userId);
+		List<Long> teamIds = memberships.stream().map(m -> m.getTeam().getId()).collect(Collectors.toList());
 
 		Map<String, Integer> teamProgress = new HashMap<>();
 
-		if (!teamIds.isEmpty()) {
-			List<Object[]> progressStats = teamMemberRepository.getTeamProgressStats(teamIds);
-
-			for (Object[] stat : progressStats) {
-				String teamName = (String) stat[0];
-				Long totalTasks = (Long) stat[1];
-				Long completedTasks = (Long) stat[2];
-
-				int progressPercentage = totalTasks > 0 ?
-					(int) ((completedTasks * 100) / totalTasks) : 0;
-
-				teamProgress.put(teamName, progressPercentage);
-			}
-		} else {
+		if (teamIds.isEmpty()) {
 			// Mock 데이터 - 팀 기능이 없을 때 샘플 데이터 제공
 			teamProgress.put("개발팀", 75);
 			teamProgress.put("디자인팀", 60);
