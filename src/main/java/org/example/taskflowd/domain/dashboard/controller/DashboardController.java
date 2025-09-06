@@ -29,6 +29,14 @@ public class DashboardController {
 
 	private final DashboardService dashboardService;
 
+	@GetMapping("/stats")
+	public ResponseEntity<ApiResponse<DashboardStatsResponse>> getStats(
+		@AuthenticationPrincipal User principal) {
+		Long userId = Long.parseLong(principal.getUserName());
+		var stats = dashboardService.getStats(userId);
+		return ApiResponse.ok(ResponseMessage.DASHBOARD_STATS_INQUIRE, stats);
+	}
+
 	@GetMapping("/my-tasks")
 	public ResponseEntity<ApiResponse<MyTasksSummaryResponse>> getMyTasksSummary(
 		@AuthenticationPrincipal User principal) {
