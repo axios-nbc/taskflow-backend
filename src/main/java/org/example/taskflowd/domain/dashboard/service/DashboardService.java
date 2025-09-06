@@ -2,6 +2,7 @@ package org.example.taskflowd.domain.dashboard.service;
 
 import lombok.RequiredArgsConstructor;
 import org.example.taskflowd.domain.dashboard.dto.ActivityResponse;
+import org.example.taskflowd.domain.dashboard.dto.DashboardStatsResponse;
 import org.example.taskflowd.domain.dashboard.dto.MyTasksSummaryResponse;
 import org.example.taskflowd.domain.dashboard.dto.TaskSummary;
 import org.example.taskflowd.domain.dashboard.dto.TeamProgressResponse;
@@ -14,12 +15,12 @@ import org.example.taskflowd.domain.task.entity.Task;
 import org.example.taskflowd.domain.task.enums.TaskStatus;
 import org.example.taskflowd.domain.task.repository.TaskRepository;
 import org.example.taskflowd.domain.user.dto.mapper.UserMapper;
-import org.example.taskflowd.domain.user.service.UserService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.HashMap;
@@ -36,7 +37,6 @@ public class DashboardService {
 	private final ActivityRepositoryMock activityRepository;
 	private final TeamRepositoryMock teamRepository;
 	private final TeamMemberRepositoryMock teamMemberRepository;
-	private final UserService userService;
 
 	public MyTasksSummaryResponse getMyTasksSummary(Long userId) {
 		LocalDateTime today = LocalDateTime.now();
@@ -93,6 +93,40 @@ public class DashboardService {
 		}
 
 		return TeamProgressResponse.of(teamProgress);
+	}
+
+	public DashboardStatsResponse getStats(Long userId) {
+		LocalDateTime today = LocalDateTime.now();
+		LocalDateTime startOfDay = today.with(LocalTime.MIN);
+		LocalDateTime endOfDay = today.with(LocalTime.MAX);
+
+		TaskStatus done = TaskStatus.COMPLETE;
+		TaskStatus inProgress = TaskStatus.IN_PROGRESS;
+		TaskStatus todo = TaskStatus.TODO;
+
+		long total = taskRepository.countByAssigneeIdAndDeletedAtIsNull(userId);
+		long completed = taskRepository.countByAssigneeIdAndStatusAndDeletedAtIsNull(userId, done);
+		long inProg = taskRepository.countByAssigneeIdAndStatusAndDeletedAtIsNull(userId, inProgress);
+		long todoCnt = taskRepository.countByAssigneeIdAndStatusAndDeletedAtIsNull(userId, todo);
+		long overdue = taskRepository.countByAssigneeIdAndDueDateBeforeAndStatusNotAndDeletedAtIsNull(userId, startOfDay, done);
+		long myToday = taskRepository.countByAssigneeIdAndDueDateBetweenAndDeletedAtIsNull(userId, startOfDay, endOfDay);
+
+		TeamProgressResponse teamProgressResponse = getTeamProgress(userId);
+		int teamProgress = 0;
+		if (teamProgressResponse != null && teamProgressResponse.teamProgress() != null && !teamProgressResponse.teamProgress().isEmpty()) {
+			teamProgress = (int) Math.round(
+				teamProgressResponse.teamProgress().values().stream()
+					.mapToInt(Integer::intValue)
+					.average()
+					.orElse(0.0)
+			);
+		}
+
+		int completionRate = total > 0 ? (int) Math.round((completed * 100.0) / total) : 0;
+
+		return new DashboardStatsResponse(
+			total, completed, inProg, todoCnt, overdue, teamProgress, myToday, completionRate
+		);
 	}
 
 	public Page<ActivityResponse> getActivities(Long userId, Pageable pageable) {

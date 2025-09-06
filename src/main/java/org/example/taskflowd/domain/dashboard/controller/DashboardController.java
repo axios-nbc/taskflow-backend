@@ -4,6 +4,7 @@ import org.example.taskflowd.common.dto.response.ApiPageResponse;
 import org.example.taskflowd.common.dto.response.ApiResponse;
 import org.example.taskflowd.common.enums.ResponseMessage;
 import org.example.taskflowd.domain.dashboard.dto.ActivityResponse;
+import org.example.taskflowd.domain.dashboard.dto.DashboardStatsResponse;
 import org.example.taskflowd.domain.dashboard.dto.MyTasksSummaryResponse;
 import org.example.taskflowd.domain.dashboard.dto.TeamProgressResponse;
 import org.example.taskflowd.domain.dashboard.service.DashboardService;
@@ -28,6 +29,14 @@ import lombok.extern.slf4j.Slf4j;
 public class DashboardController {
 
 	private final DashboardService dashboardService;
+
+	@GetMapping("/stats")
+	public ResponseEntity<ApiResponse<DashboardStatsResponse>> getStats(
+		@AuthenticationPrincipal User principal) {
+		Long userId = Long.parseLong(principal.getUserName());
+		DashboardStatsResponse stats = dashboardService.getStats(userId);
+		return ApiResponse.ok(ResponseMessage.DASHBOARD_STATS_INQUIRE, stats);
+	}
 
 	@GetMapping("/my-tasks")
 	public ResponseEntity<ApiResponse<MyTasksSummaryResponse>> getMyTasksSummary(

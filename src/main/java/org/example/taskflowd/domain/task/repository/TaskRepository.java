@@ -12,7 +12,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -85,4 +84,74 @@ public interface TaskRepository extends JpaRepository<Task, Long>, JpaSpecificat
     List<Task> findByAssigneeIdAndDueDateBefore(
         @Param("assigneeId") Long assigneeId,
         @Param("beforeDate") LocalDateTime beforeDate);
+
+        @Query("SELECT t FROM Task t WHERE " +
+        "(LOWER(t.title) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+        "LOWER(t.description) LIKE LOWER(CONCAT('%', :query, '%'))) " +
+        "AND t.assignee.id = :userId AND t.deletedAt IS NULL")
+    Page<Task> findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCaseAndAssigneeId(
+        @Param("query") String query,
+        @Param("userId") Long userId,
+        Pageable pageable);
+
+        // SearchService용
+    @Query("SELECT t FROM Task t WHERE " +
+           "(LOWER(t.title) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+           "LOWER(t.description) LIKE LOWER(CONCAT('%', :query, '%'))) " +
+           "AND t.assignee.id = :userId AND t.status = :status AND t.deletedAt IS NULL")
+    Page<Task> findByQueryAndAssigneeIdAndStatus(
+        @Param("query") String query,
+        @Param("userId") Long userId,
+        @Param("status") TaskStatus status,
+        Pageable pageable);
+
+    @Query("SELECT t FROM Task t WHERE " +
+           "(LOWER(t.title) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+           "LOWER(t.description) LIKE LOWER(CONCAT('%', :query, '%'))) " +
+           "AND t.assignee.id = :userId AND t.priority = :priority AND t.deletedAt IS NULL")
+    Page<Task> findByQueryAndAssigneeIdAndPriority(
+        @Param("query") String query,
+        @Param("userId") Long userId,
+        @Param("priority") TaskPriority priority,
+        Pageable pageable);
+
+    @Query("SELECT t FROM Task t WHERE " +
+           "(LOWER(t.title) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+           "LOWER(t.description) LIKE LOWER(CONCAT('%', :query, '%'))) " +
+           "AND t.assignee.id = :userId AND t.status = :status AND t.priority = :priority " +
+           "AND t.deletedAt IS NULL")
+    Page<Task> findByQueryAndAssigneeIdAndStatusAndPriority(
+        @Param("query") String query,
+        @Param("userId") Long userId,
+        @Param("status") TaskStatus status,
+        @Param("priority") TaskPriority priority,
+        Pageable pageable);
+
+    @Query("SELECT t FROM Task t WHERE " +
+           "(LOWER(t.title) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+           "LOWER(t.description) LIKE LOWER(CONCAT('%', :query, '%'))) " +
+           "AND t.assignee.id = :userId AND t.deletedAt IS NULL " +
+           "ORDER BY t.updatedAt DESC")
+    Page<Task> findTopByQueryAndAssigneeId(
+        @Param("query") String query,
+        @Param("userId") Long userId,
+        Pageable pageable);
+
+       Page<Task> findByAssigneeIdAndStatus(Long assigneeId, TaskStatus status, Pageable pageable);
+
+       Page<Task> findByAssigneeIdAndPriority(Long assigneeId, TaskPriority priority, Pageable pageable);
+
+       Page<Task> findByAssigneeIdAndStatusAndPriority(Long assigneeId, TaskStatus status, TaskPriority priority, Pageable pageable);
+
+       long countByAssigneeIdAndDeletedAtIsNull(Long assigneeId);
+
+	   long countByAssigneeIdAndStatusAndDeletedAtIsNull(Long assigneeId, TaskStatus status);
+
+	   long countByAssigneeIdAndDueDateBeforeAndStatusNotAndDeletedAtIsNull(Long assigneeId,
+			LocalDateTime before,
+			TaskStatus status);
+
+	    long countByAssigneeIdAndDueDateBetweenAndDeletedAtIsNull(Long assigneeId,
+			LocalDateTime start,
+			LocalDateTime end);
 }
