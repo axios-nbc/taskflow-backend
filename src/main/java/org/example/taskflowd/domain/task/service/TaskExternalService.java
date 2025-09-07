@@ -1,6 +1,8 @@
 package org.example.taskflowd.domain.task.service;
 
 import lombok.RequiredArgsConstructor;
+import org.example.taskflowd.common.annotation.ActivityLogger;
+import org.example.taskflowd.domain.activityLog.enums.ActLogEnum;
 import org.example.taskflowd.domain.task.dto.request.TaskCreateRequest;
 import org.example.taskflowd.domain.task.dto.request.TaskStatusUpdateRequest;
 import org.example.taskflowd.domain.task.dto.request.TaskUpdateRequest;
@@ -44,6 +46,7 @@ public class TaskExternalService {
 
     /* ========== Main Method ========== */
     // 2.1 Task 생성
+    @ActivityLogger(type = ActLogEnum.TASK_CREATED)
     @Transactional
     public TaskCreateResponse createTask(TaskCreateRequest request, Long loginUserId) {
         User writer = userService.getUser(loginUserId);
