@@ -2,6 +2,8 @@ package org.example.taskflowd.domain.comment.service;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.example.taskflowd.common.annotation.ActivityLogger;
+import org.example.taskflowd.domain.activityLog.enums.ActLogEnum;
 import org.example.taskflowd.domain.comment.dto.response.CommentListItemResponse;
 import org.example.taskflowd.domain.comment.dto.response.CreateCommentResponse;
 import org.example.taskflowd.domain.comment.dto.response.UpdateCommentResponse;
@@ -53,6 +55,7 @@ public class CommentExternalService {
     /* ========== Main Method ========== */
     // 3.1 Comment 생성
     @Transactional
+    @ActivityLogger(type = ActLogEnum.COMMENT_CREATED)
     public CreateCommentResponse createComment(CreateCommentRequest createCommentRequest, Long taskId, Long loginUserId) {
         // 작업 및 작성자
         Task targetTask = taskInternalService.getTaskByIdOrThrow(taskId);
@@ -79,6 +82,7 @@ public class CommentExternalService {
 
     // 3.3 Comment 수정
     @Transactional
+    @ActivityLogger(type = ActLogEnum.COMMENT_UPDATED)
     public UpdateCommentResponse updateComment(UpdateCommentRequest updateCommentRequest, Long commentId, Long loginUserId) {
         User loginUser = userService.getUser(loginUserId);
         Comment comment = getCommentOrThrow(commentId);
@@ -94,6 +98,7 @@ public class CommentExternalService {
     }
 
     @Transactional
+    @ActivityLogger(type = ActLogEnum.COMMENT_DELETED)
     public void deleteComment(Long commentId, Long loginUserId) {
         User loginUser = userService.getUser(loginUserId);
         Comment comment = getCommentOrThrow(commentId);
