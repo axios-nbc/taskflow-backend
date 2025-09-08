@@ -72,14 +72,11 @@ public class ActivityLoggingAspect {
         activityLogInternalService.saveActivityLog(logType, task, message);
     }
 
-    private Task getTask(ActLogEnum type, Long taskId, Object result) throws Exception {
+    private Task getTask(ActLogEnum type, Long taskId, Object result) {
 
-        if (taskId == -1) {
-            // 만약 파라미터가 아닌 result에서 값을 가져와야 하는 경우
-            taskId = switch (type) {
-                case TASK_CREATED -> ((TaskCreateResponse) result).id();
-                default -> throw new Exception();
-            };
+        // 만약 파라미터가 아닌 result 에서 값을 가져와야 하는 경우
+        if (taskId == -1 && type == ActLogEnum.TASK_CREATED) {
+            taskId = ((TaskCreateResponse) result).id();
         }
 
         return taskInternalService.getTaskByIdOrThrow(taskId);
