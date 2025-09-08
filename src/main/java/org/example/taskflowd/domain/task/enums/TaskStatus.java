@@ -8,9 +8,9 @@ import java.util.Arrays;
 
 @Getter
 public enum TaskStatus {
-    TODO("todo"),
-    IN_PROGRESS("in_progress"),
-    DONE("done");
+    TODO("TODO"),
+    IN_PROGRESS("IN_PROGRESS"),
+    DONE("DONE");
 
     private final String code;
 
