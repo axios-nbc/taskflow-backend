@@ -1,4 +1,4 @@
-package org.example.taskflowd.doamin.task.service;
+package org.example.taskflowd.domain.task.service;
 
 import org.example.taskflowd.domain.task.dto.request.TaskCreateRequest;
 import org.example.taskflowd.domain.task.dto.response.TaskCreateResponse;
