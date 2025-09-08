@@ -6,8 +6,8 @@ import org.example.taskflowd.domain.dashboard.dto.DashboardStatsResponse;
 import org.example.taskflowd.domain.dashboard.dto.MyTasksSummaryResponse;
 import org.example.taskflowd.domain.dashboard.dto.TaskSummary;
 import org.example.taskflowd.domain.dashboard.dto.TeamProgressResponse;
-import org.example.taskflowd.domain.dashboard.mock.entity.Activity;
-import org.example.taskflowd.domain.dashboard.mock.repository.ActivityRepositoryMock;
+import org.example.taskflowd.domain.activityLog.entity.ActivityLog;
+import org.example.taskflowd.domain.activityLog.repository.ActivityLogRepository;
 import org.example.taskflowd.domain.team.entity.TeamMember;
 import org.example.taskflowd.domain.team.repository.TeamMemberRepository;
 import org.example.taskflowd.domain.task.entity.Task;
@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 public class DashboardService {
 
 	private final TaskRepository taskRepository;
-	private final ActivityRepositoryMock activityRepository;
+	private final ActivityLogRepository activityLogRepository;
 	private final TeamMemberRepository teamMemberRepository;
 
 	public MyTasksSummaryResponse getMyTasksSummary(Long userId) {
@@ -114,15 +114,15 @@ public class DashboardService {
 	}
 
 	public Page<ActivityResponse> getActivities(Long userId, Pageable pageable) {
-		Page<Activity> activities = activityRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable);
+		Page<ActivityLog> activities = activityLogRepository.findByUser_IdOrderByCreatedAtDesc(userId, pageable);
 
 		return activities.map(activity -> ActivityResponse.of(
 			activity.getId(),
-			activity.getUser() != null ? activity.getUser().getId() : userId,
-			activity.getUser() != null ? UserMapper.toResponseDto(activity.getUser()) : null,
-			activity.getAction(),
-			activity.getTargetType(),
-			activity.getTargetId(),
+			activity.getUser().getId(),
+			UserMapper.toResponseDto(activity.getUser()),
+			activity.getType().name(),
+			"TASK",
+			activity.getTask().getId(),
 			activity.getDescription(),
 			activity.getCreatedAt()
 		));
