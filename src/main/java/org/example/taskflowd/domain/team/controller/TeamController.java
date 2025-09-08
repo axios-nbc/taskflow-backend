@@ -90,5 +90,6 @@ public class TeamController {
     public ResponseEntity<ApiResponse<List<UserResponseDto>>> getAvailableUsers(@RequestParam Long teamId) {
         List<UserResponseDto> availableUsers = teamMemberService.getAvailableUsers(teamId);
         return ApiResponse.ok(TeamResponseMessage.AVAILABLE_USERS_INQUIRE, availableUsers);
+
     }
 }
