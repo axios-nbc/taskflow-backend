@@ -8,7 +8,7 @@ import org.example.taskflowd.domain.dashboard.dto.DashboardStatsResponse;
 import org.example.taskflowd.domain.dashboard.dto.MyTasksSummaryResponse;
 import org.example.taskflowd.domain.dashboard.dto.TeamProgressResponse;
 import org.example.taskflowd.domain.dashboard.service.DashboardService;
-import org.example.taskflowd.domain.user.entity.User;
+import org.example.taskflowd.common.security.AuthUser;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -32,37 +32,44 @@ public class DashboardController {
 
 	@GetMapping("/stats")
 	public ResponseEntity<ApiResponse<DashboardStatsResponse>> getStats(
-		@AuthenticationPrincipal User principal) {
-		Long userId = Long.parseLong(principal.getUserName());
+		@AuthenticationPrincipal AuthUser authUser) {
+		Long userId = authUser.id();
 		DashboardStatsResponse stats = dashboardService.getStats(userId);
 		return ApiResponse.ok(ResponseMessage.DASHBOARD_STATS_INQUIRE, stats);
 	}
 
 	@GetMapping("/my-tasks")
 	public ResponseEntity<ApiResponse<MyTasksSummaryResponse>> getMyTasksSummary(
-		@AuthenticationPrincipal User principal) {
-		Long userId = Long.parseLong(principal.getUserName());
+		@AuthenticationPrincipal AuthUser authUser) {
+		Long userId = authUser.id();
 		MyTasksSummaryResponse summary = dashboardService.getMyTasksSummary(userId);
 		return ApiResponse.ok(ResponseMessage.MY_TASKS_SUMMARY_INQUIRE, summary);
 	}
 
 	@GetMapping("/team-progress")
 	public ResponseEntity<ApiResponse<TeamProgressResponse>> getTeamProgress(
-		@AuthenticationPrincipal User principal) {
-		Long userId = Long.parseLong(principal.getUserName());
+		@AuthenticationPrincipal AuthUser authUser) {
+		Long userId = authUser.id();
 		TeamProgressResponse progress = dashboardService.getTeamProgress(userId);
 		return ApiResponse.ok(ResponseMessage.TEAM_PROGRESS_INQUIRE, progress);
 	}
 
 	@GetMapping("/activities")
 	public ResponseEntity<ApiPageResponse<ActivityResponse>> getActivities(
-		@AuthenticationPrincipal User principal,
+		@AuthenticationPrincipal AuthUser authUser,
 		@RequestParam(required = false, defaultValue = "0") int page,
 		@RequestParam(required = false, defaultValue = "10") int size) {
 
-		Long userId = Long.parseLong(principal.getUserName());
+		Long userId = authUser.id();
 		Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
 
 		return ApiPageResponse.success(dashboardService.getActivities(userId, pageable));
+	}
+
+	@GetMapping("/weekly-trend")
+	public ResponseEntity<ApiResponse<java.util.List<org.example.taskflowd.domain.dashboard.dto.WeeklyTrendItem>>> getWeeklyTrend(
+		@AuthenticationPrincipal AuthUser authUser) {
+		java.util.List<org.example.taskflowd.domain.dashboard.dto.WeeklyTrendItem> data = dashboardService.getWeeklyTrend(authUser.id());
+		return ResponseEntity.ok(ApiResponse.ofSuccess("주간 작업 추세 조회 완료", data));
 	}
 }
