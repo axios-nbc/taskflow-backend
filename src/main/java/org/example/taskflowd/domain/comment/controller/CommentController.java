@@ -75,17 +75,19 @@ public class CommentController {
     public ResponseEntity<ApiResponse<UpdateCommentResponse>> updateComment(
             @AuthenticationPrincipal AuthUser authUser,
             @PathVariable Long commentId,
+            @PathVariable Long taskId,
             @RequestBody UpdateCommentRequest updateCommentRequest) {
-        return ApiResponse.ok(commentExternalService.updateComment(updateCommentRequest, commentId, authUser.id()));
+        return ApiResponse.ok(commentExternalService.updateComment(updateCommentRequest, commentId, authUser.id(), taskId));
     }
 
     // 3.4 Comment 삭제
     @DeleteMapping("/{commentId}")
     public ResponseEntity<ApiResponse<Object>> deleteComment(
             @AuthenticationPrincipal AuthUser authUser,
-            @PathVariable Long commentId
+            @PathVariable Long commentId,
+            @PathVariable Long taskId
     ) {
-        commentExternalService.deleteComment(commentId, authUser.id());
+        commentExternalService.deleteComment(commentId, authUser.id(), taskId);
         return ApiResponse.ok(null);
     }
 }

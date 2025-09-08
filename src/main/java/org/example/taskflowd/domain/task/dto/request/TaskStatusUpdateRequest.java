@@ -6,7 +6,7 @@ import org.example.taskflowd.domain.task.enums.TaskStatus;
 import java.time.LocalDateTime;
 
 public record TaskStatusUpdateRequest(
-  @NotBlank
+//  @NotBlank
   TaskStatus status
 ){
 }
