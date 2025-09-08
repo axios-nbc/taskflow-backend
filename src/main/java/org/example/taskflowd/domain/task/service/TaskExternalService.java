@@ -66,8 +66,6 @@ public class TaskExternalService {
 
     // 2.3 Task 상세 조회
     public TaskDetailResponse getDetailedTaskById (Long taskId) {
-        Task tasks = getTaskOrThrow(taskId);
-
         return getTaskMapped(taskId, taskMapper::toDetailResponse);
     }
 
