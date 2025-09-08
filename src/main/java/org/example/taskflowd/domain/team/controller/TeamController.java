@@ -85,11 +85,11 @@ public class TeamController {
         return ApiResponse.ok(TeamResponseMessage.TEAM_MEMBER_REMOVED, team);
     }
 
-    // 추가 가능한 사용자 목록 조회
-    @GetMapping("/users/available")
-    public ResponseEntity<ApiResponse<List<UserResponseDto>>> getAvailableUsers(@RequestParam Long teamId) {
-        List<UserResponseDto> availableUsers = teamMemberService.getAvailableUsers(teamId);
-        return ApiResponse.ok(TeamResponseMessage.AVAILABLE_USERS_INQUIRE, availableUsers);
-
-    }
+    // 추가 가능한 사용자 목록 조회 유저로 이동
+//    @GetMapping("/users/available")
+//    public ResponseEntity<ApiResponse<List<UserResponseDto>>> getAvailableUsers(@RequestParam Long teamId) {
+//        List<UserResponseDto> availableUsers = teamMemberService.getAvailableUsers(teamId);
+//        return ApiResponse.ok(TeamResponseMessage.AVAILABLE_USERS_INQUIRE, availableUsers);
+//
+//    }
 }

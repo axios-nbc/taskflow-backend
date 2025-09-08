@@ -2,6 +2,8 @@ package org.example.taskflowd.domain.user.controller;
 
 import org.example.taskflowd.common.dto.response.ApiResponse;
 import org.example.taskflowd.common.security.AuthUser;
+import org.example.taskflowd.domain.team.enums.TeamResponseMessage;
+import org.example.taskflowd.domain.team.service.TeamMemberService;
 import org.example.taskflowd.domain.user.dto.request.UserDeleteRequestDto;
 import org.example.taskflowd.domain.user.dto.request.UserSaveRequestDto;
 import org.example.taskflowd.domain.user.dto.request.UserUpdateRequestDto;
@@ -27,6 +29,7 @@ import java.util.List;
 public class UserController {
 
     private final UserService userService; // 실제 비즈니스 로직 처리는 UserService 에서 진행.
+    private final TeamMemberService teamMemberService;
 
     // 회원가입 API
     @PostMapping("/auth/register")
@@ -36,7 +39,7 @@ public class UserController {
     }
 
     // 전체 사용자 조회 API
-    @GetMapping
+    @GetMapping("/users")
     public ResponseEntity<List<UserResponseDto>> getAllUsers() {
         List<UserResponseDto> users = userService.findAll();
         return ResponseEntity.ok(users);
@@ -74,5 +77,12 @@ public class UserController {
     public ResponseEntity<String> deleteAccount(@AuthenticationPrincipal AuthUser authUser, @RequestBody UserDeleteRequestDto dto) {
         userService.deleteById(authUser.id(), dto.getPassword());
         return ResponseEntity.ok("계정이 삭제되었습니다");
+    }
+
+    @GetMapping("/users/available")
+    public ResponseEntity<ApiResponse<List<UserResponseDto>>> getAvailableUsers(@RequestParam Long teamId) {
+        List<UserResponseDto> availableUsers = teamMemberService.getAvailableUsers(teamId);
+        return ApiResponse.ok(TeamResponseMessage.AVAILABLE_USERS_INQUIRE, availableUsers);
+
     }
 }
