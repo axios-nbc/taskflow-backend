@@ -13,5 +13,5 @@ import java.util.UUID;
 @EqualsAndHashCode
 public class TeamMemberId implements Serializable {
     private Long id;
-    private UUID idPk;
+    private Long userId;
 }
