@@ -3,8 +3,9 @@ package org.example.taskflowd.domain.dashboard.service;
 import org.example.taskflowd.domain.dashboard.dto.ActivityResponse;
 import org.example.taskflowd.domain.dashboard.dto.MyTasksSummaryResponse;
 import org.example.taskflowd.domain.dashboard.dto.TeamProgressResponse;
-import org.example.taskflowd.domain.dashboard.mock.entity.Activity;
-import org.example.taskflowd.domain.dashboard.mock.repository.ActivityRepositoryMock;
+import org.example.taskflowd.domain.activityLog.entity.ActivityLog;
+import org.example.taskflowd.domain.activityLog.enums.ActLogEnum;
+import org.example.taskflowd.domain.activityLog.repository.ActivityLogRepository;
 import org.example.taskflowd.domain.task.entity.Task;
 import org.example.taskflowd.domain.task.enums.TaskStatus;
 import org.example.taskflowd.domain.task.repository.TaskRepository;
@@ -32,7 +33,7 @@ import static org.mockito.Mockito.*;
 class DashboardServiceTest {
 
 	@Mock private TaskRepository taskRepository;
-	@Mock private ActivityRepositoryMock activityRepository;
+	@Mock private ActivityLogRepository activityLogRepository;
 	@Mock private TeamMemberRepository teamMemberRepository;
 	@Mock private UserService userService;
 
@@ -133,8 +134,8 @@ class DashboardServiceTest {
 	}
 
 	@Test
-	@DisplayName("팀이 없을 때 모의 데이터 반환")
-	void 팀이_없을때_모의데이터_반환() {
+	@DisplayName("팀이 없을 때 빈 맵 반환")
+	void 팀이_없을때_빈맵_반환() {
 		// Given
 		when(teamMemberRepository.findByUserId(userId)).thenReturn(Collections.emptyList());
 
@@ -142,11 +143,7 @@ class DashboardServiceTest {
 		TeamProgressResponse response = dashboardService.getTeamProgress(userId);
 
 		// Then
-		assertThat(response.teamProgress()).isNotEmpty();
-		assertThat(response.teamProgress()).containsKeys("개발팀", "디자인팀", "QA팀");
-		assertThat(response.teamProgress()).containsEntry("개발팀", 75);
-		assertThat(response.teamProgress()).containsEntry("디자인팀", 60);
-		assertThat(response.teamProgress()).containsEntry("QA팀", 85);
+		assertThat(response.teamProgress()).isEmpty();
 
 		verify(teamMemberRepository, times(1)).findByUserId(userId);
 		verify(teamMemberRepository, never()).getTeamProgressStats(anyList());
@@ -158,19 +155,15 @@ class DashboardServiceTest {
 		// Given
 		User user = new User("테스트", "testuser", "test@example.com", "password");
 
-		Activity activity = new Activity();
-		activity.setId(1L);
-		activity.setUser(user);
-		activity.setAction("CREATE");
-		activity.setTargetType("TASK");
-		activity.setTargetId(101L);
-		activity.setDescription("새 작업 생성");
-		activity.setCreatedAt(LocalDateTime.now());
+		Task task = Task.builder()
+			.title("t").description("d").writer(user).assignee(user).status(TaskStatus.TODO)
+			.dueDate(LocalDateTime.now()).build();
+		ActivityLog activity = ActivityLog.create(ActLogEnum.TASK_CREATED, user, task, "새 작업 생성");
 
 		Pageable pageable = PageRequest.of(0, 10, Sort.by("createdAt").descending());
-		Page<Activity> page = new PageImpl<>(List.of(activity), pageable, 1);
+		Page<ActivityLog> page = new PageImpl<>(List.of(activity), pageable, 1);
 
-		when(activityRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable))
+		when(activityLogRepository.findByUser_IdOrderByCreatedAtDesc(userId, pageable))
 			.thenReturn(page);
 
 		// When
@@ -178,11 +171,11 @@ class DashboardServiceTest {
 
 		// Then
 		assertThat(response).hasSize(1);
-		assertThat(response.getContent().get(0).action()).isEqualTo("CREATE");
+		assertThat(response.getContent().get(0).action()).isEqualTo("TASK_CREATED");
 		assertThat(response.getContent().get(0).targetType()).isEqualTo("TASK");
 		assertThat(response.getContent().get(0).description()).isEqualTo("새 작업 생성");
 
-		verify(activityRepository, times(1)).findByUserIdOrderByCreatedAtDesc(userId, pageable);
+		verify(activityLogRepository, times(1)).findByUser_IdOrderByCreatedAtDesc(userId, pageable);
 	}
 
 	@Test
@@ -263,9 +256,9 @@ class DashboardServiceTest {
 	void 활동내역_조회_빈결과() {
 		// Given
 		Pageable pageable = PageRequest.of(0, 10, Sort.by("createdAt").descending());
-		Page<Activity> emptyPage = new PageImpl<>(Collections.emptyList(), pageable, 0);
+		Page<ActivityLog> emptyPage = new PageImpl<>(Collections.emptyList(), pageable, 0);
 
-		when(activityRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable))
+		when(activityLogRepository.findByUser_IdOrderByCreatedAtDesc(userId, pageable))
 			.thenReturn(emptyPage);
 
 		// When
@@ -275,7 +268,7 @@ class DashboardServiceTest {
 		assertThat(response).isEmpty();
 		assertThat(response.getTotalElements()).isEqualTo(0);
 
-		verify(activityRepository, times(1)).findByUserIdOrderByCreatedAtDesc(userId, pageable);
+		verify(activityLogRepository, times(1)).findByUser_IdOrderByCreatedAtDesc(userId, pageable);
 	}
 
 	@Test
