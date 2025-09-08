@@ -21,7 +21,6 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class TeamService {
 
     private final TeamRepository teamRepository;
@@ -74,7 +73,7 @@ public class TeamService {
     @Transactional
     public void deleteTeam(Long teamId) {
         Team team = findTeamById(teamId);
-        team.delete(); // BaseEntity의 soft delete
+        teamRepository.delete(team);
     }
 
     // 팀 멤버 목록 조회

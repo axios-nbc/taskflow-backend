@@ -19,10 +19,6 @@ public class TeamMember extends BaseEntity {
     private Long id;
 
     @Id
-    private UUID idPk;
-
-    private UUID idPk2;
-
     private Long userId;
 
     private String role;
@@ -34,9 +30,8 @@ public class TeamMember extends BaseEntity {
     private Team team;
 
     // 생성자
-    public TeamMember(Long id, UUID idPk, Long userId, String role) {
+    public TeamMember(Long id, Long userId, String role) {
         this.id = id;
-        this.idPk = idPk;
         this.userId = userId;
         this.role = role;
     }
@@ -44,7 +39,6 @@ public class TeamMember extends BaseEntity {
     // 편의 생성자
     public TeamMember(Team team, Long userId, String role) {
         this.id = team.getId();
-        this.idPk = team.getIdPk(); // Team의 UUID 사용
         this.userId = userId;
         this.role = role;
         this.team = team;

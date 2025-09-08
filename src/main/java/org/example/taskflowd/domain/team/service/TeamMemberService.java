@@ -22,7 +22,6 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class TeamMemberService {
 
     private final TeamRepository teamRepository;
@@ -53,9 +52,9 @@ public class TeamMemberService {
         // 팀 멤버 존재 확인
         TeamMember teamMember = teamMemberRepository.findByTeamIdAndUserId(teamId, userId)
                 .orElseThrow(() -> new GlobalException(TeamErrorCode.MEMBER_NOT_FOUND));
-
-
-        teamMember.delete();
+        team.removeMember(teamMember);
+        teamMember.delete();//삭제표시로 요청
+        teamMemberRepository.save(teamMember); //삭제한것으로 해달라고 부탁
         return convertToTeamResponse(team);
     }
 
