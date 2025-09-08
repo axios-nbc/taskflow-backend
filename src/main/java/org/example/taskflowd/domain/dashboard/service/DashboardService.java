@@ -54,14 +54,14 @@ public class DashboardService {
 
 		List<TaskSummary> upcomingTasks = taskRepository.findByAssigneeIdAndDueDateAfter(userId, tomorrow)
 			.stream()
-			.filter(task -> !task.getStatus().equals(TaskStatus.COMPLETE))
+			.filter(task -> !task.getStatus().equals(TaskStatus.DONE))
 			.limit(5)
 			.map(this::toTaskSummary)
 			.collect(Collectors.toList());
 
 		List<TaskSummary> overdueTasks = taskRepository.findByAssigneeIdAndDueDateBefore(userId, startOfDay)
 			.stream()
-			.filter(task -> !task.getStatus().equals(TaskStatus.COMPLETE))
+			.filter(task -> !task.getStatus().equals(TaskStatus.DONE))
 			.map(this::toTaskSummary)
 			.collect(Collectors.toList());
 
@@ -95,7 +95,7 @@ public class DashboardService {
 		LocalDateTime startOfDay = today.with(LocalTime.MIN);
 		LocalDateTime endOfDay = today.with(LocalTime.MAX);
 
-		TaskStatus done = TaskStatus.COMPLETE;
+		TaskStatus done = TaskStatus.DONE;
 		TaskStatus inProgress = TaskStatus.IN_PROGRESS;
 		TaskStatus todo = TaskStatus.TODO;
 
@@ -144,7 +144,7 @@ public class DashboardService {
 			if (d != null && byDay.containsKey(d.toString())) {
 				WeeklyTrendItem cur = byDay.get(d.toString());
 				int tasksCnt = cur.tasks() + 1;
-				int completed = cur.completed() + (t.getStatus() == TaskStatus.COMPLETE ? 1 : 0);
+				int completed = cur.completed() + (t.getStatus() == TaskStatus.DONE ? 1 : 0);
 				byDay.put(d.toString(), WeeklyTrendItem.of(cur.name(), tasksCnt, completed, d));
 			}
 		}

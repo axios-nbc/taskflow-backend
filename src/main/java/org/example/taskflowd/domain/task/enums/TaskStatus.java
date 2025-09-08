@@ -10,7 +10,7 @@ import java.util.Arrays;
 public enum TaskStatus {
     TODO("todo"),
     IN_PROGRESS("in_progress"),
-    COMPLETE("complete");
+    DONE("done");
 
     private final String code;
 
