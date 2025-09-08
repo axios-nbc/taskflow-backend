@@ -70,6 +70,10 @@ public class ApiResponse<T> {
         return ResponseEntity.ok(ofSuccess(msg, data));
     }
 
+    public static <T> ResponseEntity<ApiResponse<T>> ok(String msg, T data) {
+        return ResponseEntity.ok(ofSuccess(msg, data));
+    }
+
     // 200 OK + body (데이터만)
     public static <T> ResponseEntity<ApiResponse<T>> ok(T data) {
         return ResponseEntity.ok(ofSuccess(data));

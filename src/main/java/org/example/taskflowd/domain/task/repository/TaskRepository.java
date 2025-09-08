@@ -137,6 +137,14 @@ public interface TaskRepository extends JpaRepository<Task, Long>, JpaSpecificat
         @Param("userId") Long userId,
         Pageable pageable);
 
+    @Query("SELECT t FROM Task t WHERE " +
+           "(t.title LIKE CONCAT('%', :query, '%') OR " +
+           "t.description LIKE CONCAT('%', :query, '%')) " +
+           "AND t.deletedAt IS NULL ORDER BY t.updatedAt DESC")
+    Page<Task> findTopByQuery(
+        @Param("query") String query,
+        Pageable pageable);
+
        Page<Task> findByAssigneeIdAndStatus(Long assigneeId, TaskStatus status, Pageable pageable);
 
        Page<Task> findByAssigneeIdAndPriority(Long assigneeId, TaskPriority priority, Pageable pageable);
