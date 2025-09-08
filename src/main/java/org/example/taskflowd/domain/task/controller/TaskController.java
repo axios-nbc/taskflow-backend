@@ -29,7 +29,7 @@ import java.net.URI;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/tasks")
+@RequestMapping("/api/tasks")
 @RequiredArgsConstructor
 public class TaskController {
     // In Domain
@@ -57,7 +57,7 @@ public class TaskController {
 
     // 2.2 Task 목록 조회
     @GetMapping
-    public ResponseEntity<ApiPageResponse<TaskListItemResponse>> getAllTasks(
+    public ResponseEntity<ApiResponse<TaskPageResponse>> getAllTasks(
             @RequestParam(required = false, defaultValue = "0") int page,
             @RequestParam(required = false, defaultValue = "10") int size,
             @RequestParam(required = false) TaskStatus status,
@@ -76,9 +76,9 @@ public class TaskController {
             spec = spec.and(TaskSpecs.assignedTo(assigneeId));
 
 
-        Page<TaskListItemResponse> pageDto = taskExternalService.getTasks(pageable, spec);
+        TaskPageResponse pageDto = taskExternalService.getTasks(pageable, spec);
 
-        return ApiPageResponse.success(pageDto);
+        return ApiResponse.ok(pageDto);
     }
 
     // <<< /tasks/{taskId} >>>

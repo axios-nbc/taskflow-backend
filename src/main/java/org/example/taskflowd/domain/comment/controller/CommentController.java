@@ -25,7 +25,7 @@ import java.net.URI;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/tasks/{taskId}/comments")
+@RequestMapping("/api/tasks/{taskId}/comments")
 public class CommentController {
     // In Domain
     private final CommentExternalService commentExternalService;
