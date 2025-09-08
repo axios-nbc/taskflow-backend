@@ -1,8 +1,8 @@
 package org.example.taskflowd.domain.comment.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.example.taskflowd.common.dto.response.ApiPageResponse;
 import org.example.taskflowd.common.dto.response.ApiResponse;
+import org.example.taskflowd.common.dto.response.PageData;
 import org.example.taskflowd.common.security.AuthUser;
 import org.example.taskflowd.domain.comment.dto.request.CreateCommentRequest;
 import org.example.taskflowd.domain.comment.dto.request.UpdateCommentRequest;
@@ -54,7 +54,7 @@ public class CommentController {
 
     // 3.2 Task의 Comment 목록 조회
     @GetMapping
-    public ResponseEntity<ApiPageResponse<CommentListItemResponse>> getCommentsFromTask(
+    public ResponseEntity<ApiResponse<PageData<CommentListItemResponse>>> getCommentsFromTask(
             @RequestParam(required = false, defaultValue = "0") int page,
             @RequestParam(required = false, defaultValue = "10") int size,
             @RequestParam(required = false, defaultValue = "newest") String sort,
@@ -67,7 +67,9 @@ public class CommentController {
                         Sort.sort(Comment.class).by(Comment::getCreatedAt).descending()
         );
 
-        return ApiPageResponse.success(commentExternalService.getCommentsFromTask(pageable, taskId));
+        return ApiResponse.ok(
+                CommentResponseMessage.COMMENT_LIST_INQUIRE,
+                PageData.from(commentExternalService.getCommentsFromTask(pageable, taskId)));
     }
 
     // 3.3 Comment 수정

@@ -1,11 +1,12 @@
 package org.example.taskflowd.domain.search.controller;
 
-import org.example.taskflowd.common.dto.response.ApiPageResponse;
 import org.example.taskflowd.common.dto.response.ApiResponse;
+import org.example.taskflowd.common.dto.response.PageData;
 import org.example.taskflowd.common.enums.ResponseMessage;
 import org.example.taskflowd.domain.search.dto.IntegratedSearchResponse;
 import org.example.taskflowd.domain.search.service.SearchService;
 import org.example.taskflowd.domain.task.dto.response.TaskListItemResponse;
+import org.example.taskflowd.domain.task.enums.TaskResponseMessage;
 import org.example.taskflowd.domain.user.entity.User;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -39,7 +40,7 @@ public class SearchController {
 	}
 
 	@GetMapping("/tasks/search")
-	public ResponseEntity<ApiPageResponse<TaskListItemResponse>> searchTasks(
+	public ResponseEntity<ApiResponse<PageData<TaskListItemResponse>>> searchTasks(
 		@RequestParam("q") String query,
 		@RequestParam(required = false) String status,
 		@RequestParam(required = false) String priority,
@@ -52,15 +53,13 @@ public class SearchController {
 		Long userId = Long.parseLong(principal.getUserName());
 		Pageable pageable = createPageable(page, size, sortBy, sortDir);
 
-		if (status != null || priority != null) {
-			return ApiPageResponse.success(
-				searchService.searchTasksWithFilters(query, userId, status, priority, pageable)
-			);
-		} else {
-			return ApiPageResponse.success(
-				searchService.searchTasks(query, userId, pageable)
-			);
-		}
+
+        return ApiResponse.ok(
+                TaskResponseMessage.TASK_LIST_INQUIRE,
+                (status != null || priority != null) ?
+				    PageData.from(searchService.searchTasksWithFilters(query, userId, status, priority, pageable)) :
+                        PageData.from(searchService.searchTasks(query, userId, pageable))
+        );
 	}
 
 	private Pageable createPageable(int page, int size, String sortBy, String sortDir) {
