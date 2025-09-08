@@ -6,12 +6,12 @@ import org.example.taskflowd.domain.task.entity.Task;
 import org.example.taskflowd.domain.user.entity.User;
 import org.springframework.data.domain.Pageable;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 public interface ActivityLogInternalService {
 
     void saveActivityLog(ActLogEnum type, Task task, User user, String description);
 
     ActivityLogListResponse getActivityLogs(Pageable pageable, ActLogEnum actLogEnum, Long userId, Long taskId,
-                                            LocalDateTime startDate, LocalDateTime endDate);
+                                            LocalDate startDate, LocalDate endDate);
 }

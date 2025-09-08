@@ -14,7 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Service
 @RequiredArgsConstructor
@@ -31,7 +31,7 @@ public class ActivityLogInternalServiceImpl implements ActivityLogInternalServic
 
     @Override
     public ActivityLogListResponse getActivityLogs(Pageable pageable, ActLogEnum type, Long userId, Long taskId,
-                                                   LocalDateTime startDate, LocalDateTime endDate) {
+                                                   LocalDate startDate, LocalDate endDate) {
 
 
         Specification<ActivityLog> spec = ActivityLogSpecification.build(type, userId, taskId, startDate, endDate);
