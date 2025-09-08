@@ -59,9 +59,9 @@ public class TaskExternalService {
     }
 
     // 2.2 Task 목록 조회
-    public Page<TaskListItemResponse> getTasks(Pageable pageable, Specification<Task> spec) {
+    public TaskPageResponse getTasks(Pageable pageable, Specification<Task> spec) {
         Page<Task> tasks = taskRepository.findAll(spec, pageable);
-        return tasks.map(taskMapper::toListItemResponse);
+        return TaskPageResponse.of(tasks.map(taskMapper::toListItemResponse).toList());
     }
 
     // 2.3 Task 상세 조회
