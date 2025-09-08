@@ -77,7 +77,7 @@ class SearchServiceTest {
 
         // Then
         assertThat(res.tasks()).hasSize(1);
-        assertThat(res.users()).extracting("userName").containsExactly("user1");
+        assertThat(res.users()).extracting("username").containsExactly("user1");
         assertThat(res.teams()).extracting(TeamSearchResult::name).containsExactly("개발팀");
     }
 
