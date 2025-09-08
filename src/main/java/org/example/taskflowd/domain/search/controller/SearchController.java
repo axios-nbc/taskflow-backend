@@ -1,13 +1,12 @@
 package org.example.taskflowd.domain.search.controller;
 
+import org.example.taskflowd.common.dto.response.ApiPageResponse;
 import org.example.taskflowd.common.dto.response.ApiResponse;
-import org.example.taskflowd.common.dto.response.PageData;
 import org.example.taskflowd.common.enums.ResponseMessage;
 import org.example.taskflowd.domain.search.dto.IntegratedSearchResponse;
 import org.example.taskflowd.domain.search.service.SearchService;
 import org.example.taskflowd.domain.task.dto.response.TaskListItemResponse;
-import org.example.taskflowd.domain.task.enums.TaskResponseMessage;
-import org.example.taskflowd.domain.user.entity.User;
+import org.example.taskflowd.common.security.AuthUser;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -31,35 +30,39 @@ public class SearchController {
 
 	@GetMapping("/search")
 	public ResponseEntity<ApiResponse<IntegratedSearchResponse>> integratedSearch(
-		@RequestParam("q") String query,
-		@AuthenticationPrincipal User principal) {
+		@RequestParam(value = "q", required = false) String q,
+		@RequestParam(value = "query", required = false) String query,
+		@AuthenticationPrincipal AuthUser authUser) {
 
-		Long userId = Long.parseLong(principal.getUserName());
-		IntegratedSearchResponse result = searchService.integratedSearch(query, userId);
+		String term = (q != null && !q.isBlank()) ? q : (query != null ? query : "");
+		IntegratedSearchResponse result = searchService.integratedSearch(term, authUser.id());
 		return ApiResponse.ok(ResponseMessage.INTEGRATED_SEARCH_COMPLETED, result);
 	}
 
 	@GetMapping("/tasks/search")
-	public ResponseEntity<ApiResponse<PageData<TaskListItemResponse>>> searchTasks(
-		@RequestParam("q") String query,
+	public ResponseEntity<ApiPageResponse<TaskListItemResponse>> searchTasks(
+		@RequestParam(value = "q", required = false) String q,
+		@RequestParam(value = "query", required = false) String query,
 		@RequestParam(required = false) String status,
 		@RequestParam(required = false) String priority,
 		@RequestParam(required = false, defaultValue = "0") int page,
 		@RequestParam(required = false, defaultValue = "10") int size,
 		@RequestParam(required = false, defaultValue = "updatedAt") String sortBy,
 		@RequestParam(required = false, defaultValue = "desc") String sortDir,
-		@AuthenticationPrincipal User principal) {
+		@AuthenticationPrincipal AuthUser authUser) {
 
-		Long userId = Long.parseLong(principal.getUserName());
+		String term = (q != null && !q.isBlank()) ? q : (query != null ? query : "");
 		Pageable pageable = createPageable(page, size, sortBy, sortDir);
 
-
-        return ApiResponse.ok(
-                TaskResponseMessage.TASK_LIST_INQUIRE,
-                (status != null || priority != null) ?
-				    PageData.from(searchService.searchTasksWithFilters(query, userId, status, priority, pageable)) :
-                        PageData.from(searchService.searchTasks(query, userId, pageable))
-        );
+		if (status != null || priority != null) {
+			return ApiPageResponse.success(
+				searchService.searchTasksWithFilters(term, authUser.id(), status, priority, pageable)
+			);
+		} else {
+			return ApiPageResponse.success(
+				searchService.searchTasks(term, authUser.id(), pageable)
+			);
+		}
 	}
 
 	private Pageable createPageable(int page, int size, String sortBy, String sortDir) {
