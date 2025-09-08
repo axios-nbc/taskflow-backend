@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.HashMap;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -70,10 +71,16 @@ public class DashboardService {
 		Map<String, Integer> teamProgress = new HashMap<>();
 
 		if (teamIds.isEmpty()) {
-			// Mock 데이터 - 팀 기능이 없을 때 샘플 데이터 제공
-			teamProgress.put("개발팀", 75);
-			teamProgress.put("디자인팀", 60);
-			teamProgress.put("QA팀", 85);
+			return TeamProgressResponse.of(Collections.emptyMap());
+		}
+
+		List<Object[]> rows = teamMemberRepository.getTeamProgressStats(teamIds);
+		for (Object[] r : rows) {
+			String teamName = (String) r[0];
+			long total = ((Number) r[1]).longValue();
+			long done = ((Number) r[2]).longValue();
+			int rate = total > 0 ? (int) Math.round(done * 100.0 / total) : 0;
+			teamProgress.put(teamName, rate);
 		}
 
 		return TeamProgressResponse.of(teamProgress);
