@@ -1,17 +1,16 @@
 package org.example.taskflowd.domain.dashboard.service;
 
+
+
 import org.example.taskflowd.domain.dashboard.dto.ActivityResponse;
 import org.example.taskflowd.domain.dashboard.dto.MyTasksSummaryResponse;
 import org.example.taskflowd.domain.dashboard.dto.TeamProgressResponse;
-import org.example.taskflowd.domain.dashboard.mock.entity.Activity;
-import org.example.taskflowd.domain.dashboard.mock.repository.ActivityRepositoryMock;
 import org.example.taskflowd.domain.task.entity.Task;
 import org.example.taskflowd.domain.task.enums.TaskStatus;
 import org.example.taskflowd.domain.task.repository.TaskRepository;
 import org.example.taskflowd.domain.team.entity.Team;
 import org.example.taskflowd.domain.team.entity.TeamMember;
 import org.example.taskflowd.domain.team.repository.TeamMemberRepository;
-import org.example.taskflowd.domain.user.entity.User;
 import org.example.taskflowd.domain.user.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -32,7 +31,8 @@ import static org.mockito.Mockito.*;
 class DashboardServiceTest {
 
 	@Mock private TaskRepository taskRepository;
-	@Mock private ActivityRepositoryMock activityRepository;
+	@Mock
+    private ActivityRepositoryMock activityRepository;
 	@Mock private TeamMemberRepository teamMemberRepository;
 	@Mock private UserService userService;
 
