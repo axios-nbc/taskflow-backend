@@ -37,9 +37,9 @@ public class UserController {
 
     // 전체 사용자 조회 API
     @GetMapping("/users")
-    public ResponseEntity<List<UserResponseDto>> getAllUsers() {
+    public ResponseEntity<ApiResponse<List<UserResponseDto>>> getAllUsers() {
         List<UserResponseDto> users = userService.findAll();
-        return ResponseEntity.ok(users);
+        return ApiResponse.ok(users);
     }
 
     // 단일 사용자 조회 API
