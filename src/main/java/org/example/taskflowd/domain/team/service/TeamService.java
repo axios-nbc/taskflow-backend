@@ -108,8 +108,8 @@ public class TeamService {
         UserResponseDto userDto = userService.getProfile(teamMember.getUserId());
         return new UserResponseDto(
                 userDto.id(),
-                userDto.username(),
                 userDto.name(),
+                userDto.username(),
                 userDto.email(),
                 teamMember.getRole(),
                 userDto.createdAt()
