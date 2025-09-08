@@ -8,6 +8,7 @@ import org.example.taskflowd.domain.activityLog.enums.ActLogEnum;
 import org.example.taskflowd.domain.activityLog.repository.ActivityLogRepository;
 import org.example.taskflowd.domain.activityLog.specs.ActivityLogSpecification;
 import org.example.taskflowd.domain.task.entity.Task;
+import org.example.taskflowd.domain.user.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -22,9 +23,9 @@ public class ActivityLogInternalServiceImpl implements ActivityLogInternalServic
     private final ActivityLogRepository activityLogRepository;
 
     @Override
-    public void saveActivityLog(ActLogEnum type, Task task, String description) {
+    public void saveActivityLog(ActLogEnum type, Task task, User user, String description) {
 
-        ActivityLog activityLog = ActivityLog.create(type, task.getAssignee(), task, description);
+        ActivityLog activityLog = ActivityLog.create(type, user, task, description);
         activityLogRepository.save(activityLog);
     }
 

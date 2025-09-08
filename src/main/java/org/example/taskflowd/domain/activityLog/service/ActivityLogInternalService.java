@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 
 public interface ActivityLogInternalService {
 
-    void saveActivityLog(ActLogEnum type, Task task, String description);
+    void saveActivityLog(ActLogEnum type, Task task, User user, String description);
 
     ActivityLogListResponse getActivityLogs(Pageable pageable, ActLogEnum actLogEnum, Long userId, Long taskId,
                                             LocalDateTime startDate, LocalDateTime endDate);
