@@ -10,6 +10,8 @@ import org.example.taskflowd.domain.user.dto.mapper.UserMapper;
 import org.example.taskflowd.domain.user.entity.User;
 import org.springframework.stereotype.Component;
 
+import java.util.Objects;
+
 @Component
 public class CommentMapper {
     public Comment toEntity(CreateCommentRequest request, User writer, Task task) {
@@ -31,7 +33,8 @@ public class CommentMapper {
     public CreateCommentResponse toCreateResponse(Comment comment) {
         return CreateCommentResponse.toDto(
                 comment.getId(), comment.getContent(), comment.getTask().getId(),
-                comment.getWriter().getId(), UserMapper.toResponseDto(comment.getWriter()), comment.getParent().getId(),
+                comment.getWriter().getId(), UserMapper.toResponseDto(comment.getWriter()),
+                (!Objects.isNull(comment.getParent())) ? comment.getParent().getId() : null,
                 comment.getCreatedAt(), comment.getUpdatedAt()
         );
     }
@@ -39,7 +42,8 @@ public class CommentMapper {
     public CommentListItemResponse toListItemResponse(Comment comment) {
         return CommentListItemResponse.toDto(
                 comment.getId(), comment.getContent(), comment.getTask().getId(),
-                comment.getWriter().getId(), UserMapper.toResponseDto(comment.getWriter()), comment.getParent().getId(),
+                comment.getWriter().getId(), UserMapper.toResponseDto(comment.getWriter()),
+                (!Objects.isNull(comment.getParent())) ? comment.getParent().getId() : null,
                 comment.getCreatedAt(), comment.getUpdatedAt()
         );
     }
@@ -47,7 +51,8 @@ public class CommentMapper {
     public UpdateCommentResponse toUpdateResponse(Comment comment) {
         return UpdateCommentResponse.toDto(
                 comment.getId(), comment.getContent(), comment.getTask().getId(),
-                comment.getWriter().getId(), UserMapper.toResponseDto(comment.getWriter()), comment.getParent().getId(),
+                comment.getWriter().getId(), UserMapper.toResponseDto(comment.getWriter()),
+                (!Objects.isNull(comment.getParent())) ? comment.getParent().getId() : null,
                 comment.getCreatedAt(), comment.getUpdatedAt()
         );
     }

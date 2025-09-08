@@ -19,13 +19,13 @@ public record TaskUpdateRequest(
   @FutureOrPresent
   LocalDateTime dueDate,
 
-  @NotBlank
+//  @NotBlank
   TaskPriority priority,
 
-  @NotBlank
+//  @NotBlank
   TaskStatus status,
 
-  @NotBlank
+//  @NotBlank
   @Positive
   Long assigneeId
 ){
