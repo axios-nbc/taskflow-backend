@@ -20,7 +20,7 @@ public class ActivityLog extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Enumerated
+    @Enumerated(EnumType.STRING)
     private ActLogEnum type;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
