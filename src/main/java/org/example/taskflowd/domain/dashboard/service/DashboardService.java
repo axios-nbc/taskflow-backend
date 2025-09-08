@@ -129,24 +129,27 @@ public class DashboardService {
 		LocalDateTime start = today.minusDays(6).with(LocalTime.MIN);
 		LocalDateTime end = today.with(LocalTime.MAX);
 
-		List<Task> tasks = taskRepository.findByDueDateBetween(start, end);
+		List<Task> created = taskRepository.findByCreatedAtBetween(start, end);
+		List<Task> finished = taskRepository.findByUpdatedAtBetweenAndStatus(start, end, TaskStatus.DONE);
 
-		Map<String, WeeklyTrendItem> byDay = new LinkedHashMap<>();
+		Map<LocalDate, WeeklyTrendItem> byDay = new LinkedHashMap<>();
 		String[] names = {"월","화","수","목","금","토","일"};
 		for (int i = 6; i >= 0; i--) {
 			LocalDate day = today.minusDays(i).toLocalDate();
 			String name = names[day.getDayOfWeek().getValue() - 1];
-			byDay.put(day.toString(), WeeklyTrendItem.of(name, 0, 0, day));
+			byDay.put(day, WeeklyTrendItem.of(name, 0, 0, day));
 		}
 
-		for (Task t : tasks) {
-			LocalDate d = t.getDueDate() != null ? t.getDueDate().toLocalDate() : null;
-			if (d != null && byDay.containsKey(d.toString())) {
-				WeeklyTrendItem cur = byDay.get(d.toString());
-				int tasksCnt = cur.tasks() + 1;
-				int completed = cur.completed() + (t.getStatus() == TaskStatus.DONE ? 1 : 0);
-				byDay.put(d.toString(), WeeklyTrendItem.of(cur.name(), tasksCnt, completed, d));
-			}
+		for (Task t : created) {
+			LocalDate d = t.getCreatedAt().toLocalDate();
+			WeeklyTrendItem cur = byDay.get(d);
+			if (cur != null) byDay.put(d, WeeklyTrendItem.of(cur.name(), cur.tasks() + 1, cur.completed(), d));
+		}
+
+		for (Task t : finished) {
+			LocalDate d = t.getUpdatedAt().toLocalDate();
+			WeeklyTrendItem cur = byDay.get(d);
+			if (cur != null) byDay.put(d, WeeklyTrendItem.of(cur.name(), cur.tasks(), cur.completed() + 1, d));
 		}
 
 		return new ArrayList<>(byDay.values());
