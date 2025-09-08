@@ -115,8 +115,7 @@ public class SearchService {
 			return Collections.emptyList();
 		}
 		
-		Page<Task> tasks = taskRepository.findTopByQueryAndAssigneeId(query, userId, 
-			PageRequest.of(0, 10));
+		Page<Task> tasks = taskRepository.findTopByQuery(query, PageRequest.of(0, 10));
 		return tasks.getContent();
 	}
 
