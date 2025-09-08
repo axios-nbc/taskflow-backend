@@ -6,6 +6,7 @@ import org.example.taskflowd.domain.dashboard.dto.DashboardStatsResponse;
 import org.example.taskflowd.domain.dashboard.dto.MyTasksSummaryResponse;
 import org.example.taskflowd.domain.dashboard.dto.TaskSummary;
 import org.example.taskflowd.domain.dashboard.dto.TeamProgressResponse;
+import org.example.taskflowd.domain.dashboard.dto.WeeklyTrendItem;
 import org.example.taskflowd.domain.activityLog.entity.ActivityLog;
 import org.example.taskflowd.domain.activityLog.repository.ActivityLogRepository;
 import org.example.taskflowd.domain.team.entity.TeamMember;
@@ -20,8 +21,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -118,6 +122,34 @@ public class DashboardService {
 		return new DashboardStatsResponse(
 			total, completed, inProg, todoCnt, overdue, teamProgress, myToday, completionRate
 		);
+	}
+
+	public List<WeeklyTrendItem> getWeeklyTrend(Long userId) {
+		LocalDateTime today = LocalDateTime.now();
+		LocalDateTime start = today.minusDays(6).with(LocalTime.MIN);
+		LocalDateTime end = today.with(LocalTime.MAX);
+
+		List<Task> tasks = taskRepository.findByDueDateBetween(start, end);
+
+		Map<String, WeeklyTrendItem> byDay = new LinkedHashMap<>();
+		String[] names = {"월","화","수","목","금","토","일"};
+		for (int i = 6; i >= 0; i--) {
+			LocalDate day = today.minusDays(i).toLocalDate();
+			String name = names[day.getDayOfWeek().getValue() - 1];
+			byDay.put(day.toString(), WeeklyTrendItem.of(name, 0, 0, day));
+		}
+
+		for (Task t : tasks) {
+			LocalDate d = t.getDueDate() != null ? t.getDueDate().toLocalDate() : null;
+			if (d != null && byDay.containsKey(d.toString())) {
+				WeeklyTrendItem cur = byDay.get(d.toString());
+				int tasksCnt = cur.tasks() + 1;
+				int completed = cur.completed() + (t.getStatus() == TaskStatus.COMPLETE ? 1 : 0);
+				byDay.put(d.toString(), WeeklyTrendItem.of(cur.name(), tasksCnt, completed, d));
+			}
+		}
+
+		return new ArrayList<>(byDay.values());
 	}
 
 	public Page<ActivityResponse> getActivities(Long userId, Pageable pageable) {
