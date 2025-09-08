@@ -1,7 +1,7 @@
 package org.example.taskflowd.domain.dashboard.controller;
 
-import org.example.taskflowd.common.dto.response.ApiPageResponse;
 import org.example.taskflowd.common.dto.response.ApiResponse;
+import org.example.taskflowd.common.dto.response.PageData;
 import org.example.taskflowd.common.enums.ResponseMessage;
 import org.example.taskflowd.domain.dashboard.dto.ActivityResponse;
 import org.example.taskflowd.domain.dashboard.dto.DashboardStatsResponse;
@@ -55,7 +55,7 @@ public class DashboardController {
 	}
 
 	@GetMapping("/activities")
-	public ResponseEntity<ApiPageResponse<ActivityResponse>> getActivities(
+	public ResponseEntity<ApiResponse<PageData<ActivityResponse>>> getActivities(
 		@AuthenticationPrincipal AuthUser authUser,
 		@RequestParam(required = false, defaultValue = "0") int page,
 		@RequestParam(required = false, defaultValue = "10") int size) {
@@ -63,7 +63,9 @@ public class DashboardController {
 		Long userId = authUser.id();
 		Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
 
-		return ApiPageResponse.success(dashboardService.getActivities(userId, pageable));
+		return ApiResponse.ok(
+                "getActivities 성공 메시지",
+                PageData.from(dashboardService.getActivities(userId, pageable)));
 	}
 
 	@GetMapping("/weekly-trend")
