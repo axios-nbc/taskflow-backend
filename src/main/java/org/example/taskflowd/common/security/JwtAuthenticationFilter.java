@@ -12,8 +12,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
-import static org.aspectj.weaver.tools.cache.SimpleCacheFactory.path;
-
 @Component // Bean 등록 (SecurityConfig에서 자동 주입됨)
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -30,10 +28,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // 1. 헤더에서 토큰 추출
         String token = resolveToken(request);
-        if (path.equals("/api/auth/register") || path.equals("/api/auth/login")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
 
         // 2. 토큰 유효성 검증 후 Authentication 객체 생성
         if (token != null && jwtProvider.validateToken(token)) {
