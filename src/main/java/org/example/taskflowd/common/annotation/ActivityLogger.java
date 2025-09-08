@@ -12,4 +12,5 @@ import java.lang.annotation.Target;
 public @interface ActivityLogger {
 
     ActLogEnum type();
+    int paramIndex() default -1;
 }

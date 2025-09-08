@@ -73,7 +73,7 @@ public class TaskExternalService {
 
     // 2.4 Task 수정
     @Transactional
-    @ActivityLogger(type = ActLogEnum.TASK_UPDATED)
+    @ActivityLogger(type = ActLogEnum.TASK_UPDATED, paramIndex = 1)
     public TaskUpdateResponse updateTask(TaskUpdateRequest request, Long taskId, Long loginUserId) {
         // 현제 - 작성자가 및 담당자 아닐 경우 권한 부족
         User loginUser = userService.getUser(loginUserId);
@@ -104,7 +104,7 @@ public class TaskExternalService {
 
     // 2.5 Task 상태 업데이트
     @Transactional
-    @ActivityLogger(type = ActLogEnum.TASK_STATUS_CHANGED)
+    @ActivityLogger(type = ActLogEnum.TASK_STATUS_CHANGED, paramIndex = 1)
     public TaskStatusChangeResponse updateTaskStatus(TaskStatusUpdateRequest request, Long taskId, Long loginUserId) {
         // 현제 - 작성자가 및 담당자 아닐 경우 권한 부족
         User loginUser = userService.getUser(loginUserId);
@@ -122,7 +122,7 @@ public class TaskExternalService {
 
     // 2.6 Task 삭제
     @Transactional
-    @ActivityLogger(type = ActLogEnum.TASK_DELETED)
+    @ActivityLogger(type = ActLogEnum.TASK_DELETED, paramIndex = 0)
     public void deleteTask(Long taskId, Long loginUserId) {
         // 현제 - 작성자가 및 담당자 아닐 경우 권한 부족
         User loginUser = userService.getUser(loginUserId);
