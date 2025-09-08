@@ -40,6 +40,9 @@ public interface TaskRepository extends JpaRepository<Task, Long>, JpaSpecificat
     // 삭제 필터링 id 탐색
     Optional<Task> findByIdAndDeletedAtIsNull(Long id);
 
+    List<Task> findByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
+    List<Task> findByUpdatedAtBetweenAndStatus(LocalDateTime start, LocalDateTime end, TaskStatus status);
+
     /* ===== N+1 방지용 EntityGraph ===== */
 
     // 단건 상세: 작성자/담당자 즉시 로딩
