@@ -8,9 +8,9 @@ import java.util.Arrays;
 
 @Getter
 public enum TaskPriority {
-    LOW("low"),
-    MEDIUM("medium"),
-    HIGH("high");
+    LOW("LOW"),
+    MEDIUM("MEDIUM"),
+    HIGH("HIGH");
 
     private final String code;
 
