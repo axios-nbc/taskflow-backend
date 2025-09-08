@@ -12,6 +12,7 @@ public record ActivityLogResponse(Long id,
                                   Long userId,
                                   UserResponseDto user,
                                   Long taskId,
+                                  LocalDateTime createdAt,
                                   LocalDateTime timestamp,
                                   String description) {
 
@@ -22,7 +23,8 @@ public record ActivityLogResponse(Long id,
                 activityLog.getType(),
                 activityLog.getUser().getId(),
                 UserMapper.toResponseDto(activityLog.getUser()),
-                activityLog.getTask().getId(),
+                activityLog.getTaskId(),
+                activityLog.getCreatedAt(),
                 activityLog.getCreatedAt(),
                 activityLog.getDescription()
         );

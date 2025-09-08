@@ -164,7 +164,7 @@ public class DashboardService {
 			UserMapper.toResponseDto(activity.getUser()),
 			activity.getType().name(),
 			"TASK",
-			activity.getTask().getId(),
+			activity.getTaskId(),
 			activity.getDescription(),
 			activity.getCreatedAt()
 		));
