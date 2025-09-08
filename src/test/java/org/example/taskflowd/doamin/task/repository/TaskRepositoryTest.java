@@ -193,7 +193,8 @@ public class TaskRepositoryTest {
 
 
 
-        // when: page 0 (size 5), id desc 정렬로 조회
+        // when
+        // page 0 size 5
         Pageable page0 = PageRequest.of(0, 5, Sort.by(Sort.Direction.DESC, "id"));
         Page<Task> result0 = taskRepository.findByAssigneeId(userB.getId(), page0);
 
@@ -205,7 +206,8 @@ public class TaskRepositoryTest {
         assertThat(result0.getContent()).hasSize(5);
         assertThat(result0.getContent()).allMatch(t -> t.getAssignee().getId().equals(userB.getId()));
 
-        // when: page 1 (size 5)
+        // when
+        // page 1 size 5
         Pageable page2 = PageRequest.of(2, 5, Sort.by(Sort.Direction.DESC, "id"));
         Page<Task> result2 = taskRepository.findByAssigneeId(userB.getId(), page2);
 
@@ -229,7 +231,8 @@ public class TaskRepositoryTest {
                         null,null,null)));
         reload();
 
-        // when: page 0 (size 5), id desc 정렬로 조회
+        // when
+        // page 0 size 5 id desc
         Pageable pageable = PageRequest.of(0, 5, Sort.by(Sort.Direction.DESC, "id"));
         Page<Task> result = taskRepository.findByAssigneeId(userC.getId(), pageable);
 
@@ -237,6 +240,7 @@ public class TaskRepositoryTest {
         assertThat(result.getTotalElements()).isZero();
         assertThat(result.getContent()).isEmpty();
         assertThat(result.getTotalPages()).isZero();
-
     }
+
+    /* ========== Specification ========== */
 }
