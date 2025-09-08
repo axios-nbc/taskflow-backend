@@ -190,7 +190,7 @@ class DashboardServiceTest {
 			.description("완료된 작업 설명")
 			.writer(testUser)
 			.assignee(testUser)
-			.status(TaskStatus.COMPLETE)
+			.status(TaskStatus.DONE)
 			.dueDate(now.plusDays(1))
 			.build();
 

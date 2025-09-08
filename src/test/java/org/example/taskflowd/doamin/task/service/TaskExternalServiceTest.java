@@ -5,13 +5,14 @@ import org.example.taskflowd.domain.task.dto.response.TaskCreateResponse;
 import org.example.taskflowd.domain.task.entity.Task;
 import org.example.taskflowd.domain.task.enums.TaskPriority;
 import org.example.taskflowd.domain.task.enums.TaskStatus;
+import org.example.taskflowd.domain.task.exception.InvalidTaskException;
+import org.example.taskflowd.domain.task.exception.TaskErrorCode;
 import org.example.taskflowd.domain.task.mapper.TaskMapper;
 import org.example.taskflowd.domain.task.repository.TaskRepository;
 import org.example.taskflowd.domain.task.service.TaskExternalService;
 import org.example.taskflowd.domain.user.dto.response.UserResponseDto;
 import org.example.taskflowd.domain.user.entity.User;
 import org.example.taskflowd.domain.user.repository.UserRepository;
-import org.example.taskflowd.domain.user.service.UserService;
 import org.example.taskflowd.domain.user.service.UserServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -20,16 +21,18 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.times;
 
 
 @ExtendWith(MockitoExtension.class)
@@ -87,8 +90,9 @@ public class TaskExternalServiceTest {
     @Test
     @DisplayName("createTask: 정상적인 request dto 입력시 response dto 반환")
     void createTask_shouldReturnTaskCreateResponseDto_whenGiveValidTaskCreateRequest() {
+        // when
         LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.MICROS);
-        TaskCreateRequest req = new TaskCreateRequest("제목","내용", now, TaskPriority.LOW, assignee.getId());
+        TaskCreateRequest taskCreateRequest = new TaskCreateRequest("제목","내용", now, TaskPriority.LOW, assignee.getId());
 
         given(userService.getUser(writer.getId())).willReturn(writer);
         given(userService.getUser(assignee.getId())).willReturn(assignee);
@@ -119,7 +123,7 @@ public class TaskExternalServiceTest {
         });
 
         // when
-        TaskCreateResponse taskCreateResponse = taskExternalService.createTask(req, writer.getId());
+        TaskCreateResponse taskCreateResponse = taskExternalService.createTask(taskCreateRequest, writer.getId());
 
         // then
         assertThat(taskCreateResponse.id()).isEqualTo(123L);
@@ -136,4 +140,65 @@ public class TaskExternalServiceTest {
         assertThat(savedTask.getWriter().getId()).isEqualTo(writer.getId());
         assertThat(savedTask.getAssignee().getId()).isEqualTo(assignee.getId());
     }
+
+    @Test
+    @DisplayName("createTask: 비정상적인 assignee 지정 시 오류 반환")
+    void createTask_shouldThrow_whenGiveInvalidAssignee() {
+        // given
+        LocalDateTime now = LocalDateTime.now();
+        TaskCreateRequest taskCreateRequest = new TaskCreateRequest("제목","내용", now, TaskPriority.LOW, assignee.getId());
+        given(userService.getUser(writer.getId())).willReturn(writer);
+        given(userService.getUser(assignee.getId()))
+                .willThrow(new InvalidTaskException(TaskErrorCode.TSK_UPDATE_FAILED_INVALID_ASSIGNEE));
+
+        // when / then
+        assertThatThrownBy(() -> taskExternalService.createTask(taskCreateRequest, writer.getId()))
+                .isInstanceOf(InvalidTaskException.class)
+                .extracting("errorCode")
+                .isEqualTo(TaskErrorCode.TSK_UPDATE_FAILED_INVALID_ASSIGNEE);
+
+        then(userService).should().getUser(writer.getId());
+        then(userService).should().getUser(assignee.getId());
+        then(taskMapper).shouldHaveNoInteractions();
+        then(taskRepository).shouldHaveNoInteractions();
+    }
+
+    @Test
+    @DisplayName("createTask: 비정상적인 request dto 전달 시(dueDate) 예외 반환")
+    void createTask_shouldThrow_whenMapperFails() {
+        // given
+        LocalDateTime past = LocalDateTime.now().minusDays(1);
+        TaskCreateRequest request = new TaskCreateRequest(
+                "제목", "내용", past, TaskPriority.LOW, assignee.getId());
+
+        given(userService.getUser(writer.getId())).willReturn(writer);
+        given(userService.getUser(assignee.getId())).willReturn(assignee);
+
+        given(taskMapper.toEntity(any(TaskCreateRequest.class), eq(writer), eq(assignee)))
+                .willThrow(new IllegalArgumentException());
+
+        // when / then
+        assertThatThrownBy(() -> taskExternalService.createTask(request, writer.getId()))
+                .isInstanceOf(IllegalArgumentException.class);
+
+        then(taskRepository).shouldHaveNoInteractions();
+        then(taskMapper).should(times(1)).toEntity(any(TaskCreateRequest.class), eq(writer), eq(assignee));
+        then(taskMapper).shouldHaveNoMoreInteractions();
+
+        then(userService).should(times(1)).getUser(writer.getId());
+        then(userService).should(times(1)).getUser(assignee.getId());
+        then(userService).shouldHaveNoMoreInteractions();
+    }
+
+    @Test
+    @DisplayName("createTask: request  null일 시 오류 반환")
+    void createTask_shouldThrow_whenGiveNothing() {
+        assertThatThrownBy(() -> taskExternalService.createTask(null, writer.getId()))
+                .isInstanceOf(NullPointerException.class);
+
+        then(taskMapper).shouldHaveNoInteractions();
+        then(taskRepository).shouldHaveNoInteractions();
+    }
+
+
 }
