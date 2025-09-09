@@ -1,4 +1,4 @@
-package org.example.taskflowd.doamin.task.repository;
+package org.example.taskflowd.domain.task.repository;
 
 import jakarta.persistence.EntityManager;
 import org.example.taskflowd.common.config.JpaAuditingConfig;
