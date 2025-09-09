@@ -8,12 +8,13 @@ import org.example.taskflowd.domain.activityLog.enums.ActLogEnum;
 import org.example.taskflowd.domain.activityLog.repository.ActivityLogRepository;
 import org.example.taskflowd.domain.activityLog.specs.ActivityLogSpecification;
 import org.example.taskflowd.domain.task.entity.Task;
+import org.example.taskflowd.domain.user.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Service
 @RequiredArgsConstructor
@@ -22,15 +23,15 @@ public class ActivityLogInternalServiceImpl implements ActivityLogInternalServic
     private final ActivityLogRepository activityLogRepository;
 
     @Override
-    public void saveActivityLog(ActLogEnum type, Task task, String description) {
+    public void saveActivityLog(ActLogEnum type, Task task, User user, String description) {
 
-        ActivityLog activityLog = ActivityLog.create(type, task.getAssignee(), task, description);
+        ActivityLog activityLog = ActivityLog.create(type, user, task, description);
         activityLogRepository.save(activityLog);
     }
 
     @Override
     public ActivityLogListResponse getActivityLogs(Pageable pageable, ActLogEnum type, Long userId, Long taskId,
-                                                   LocalDateTime startDate, LocalDateTime endDate) {
+                                                   LocalDate startDate, LocalDate endDate) {
 
 
         Specification<ActivityLog> spec = ActivityLogSpecification.build(type, userId, taskId, startDate, endDate);

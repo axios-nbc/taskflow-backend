@@ -24,20 +24,18 @@ public class ActivityLog extends BaseEntity {
     private ActLogEnum type;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id", nullable = false,
+    @JoinColumn(name = "user", nullable = false,
             foreignKey = @ForeignKey(name = "fk_activity_logs_user"))
     private User user;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "task_id", nullable = false,
-            foreignKey = @ForeignKey(name = "fk_activity_logs_task"))
-    private Task task;
+    private Long userId;
+    private Long taskId;
 
     @NotBlank
     @Column(nullable = false)
     private String description;
 
     public static ActivityLog create(ActLogEnum type, User user, Task task, String description) {
-        return new ActivityLog(null, type, user, task, description);
+        return new ActivityLog(null, type, user, user.getId(), task.getId(), description);
     }
 }

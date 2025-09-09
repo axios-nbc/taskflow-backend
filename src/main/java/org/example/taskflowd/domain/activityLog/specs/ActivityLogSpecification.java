@@ -4,21 +4,21 @@ import org.example.taskflowd.domain.activityLog.entity.ActivityLog;
 import org.example.taskflowd.domain.activityLog.enums.ActLogEnum;
 import org.springframework.data.jpa.domain.Specification;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 public class ActivityLogSpecification {
 
-    public static Specification<ActivityLog> build(ActLogEnum type, Long userId, Long taskId, LocalDateTime startDate, LocalDateTime endDate) {
+    public static Specification<ActivityLog> build(ActLogEnum type, Long userId, Long taskId, LocalDate startDate, LocalDate endDate) {
 
-        Specification<ActivityLog> spec = Specification.unrestricted();
-
-        if (type != null) spec.and(equalType(type));
-        if (userId != null) spec.and(equalUser(userId));
-        if (taskId != null) spec.and(equalTask(taskId));
-        if (startDate != null) spec.and(equalStartDate(startDate));
-        if (endDate != null) spec.and(equalEndDate(endDate));
-
-        return spec;
+        return Specification.allOf(
+                type != null ? equalType(type) : null,
+                userId != null ? equalUser(userId) : null,
+                taskId != null ? equalTask(taskId) : null,
+                startDate != null ? fromStartDate(startDate.atStartOfDay()) : null,
+                endDate != null ? untilEndDate(endDate.atTime(LocalTime.MAX)) : null
+        );
     }
 
     public static Specification<ActivityLog> equalType(ActLogEnum type) {
@@ -26,18 +26,18 @@ public class ActivityLogSpecification {
     }
 
     public static Specification<ActivityLog> equalUser(Long userId) {
-        return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("user_id"), userId);
+        return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("userId"), userId);
     }
 
     public static Specification<ActivityLog> equalTask(Long taskId) {
-        return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("task_id"), taskId);
+        return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("taskId"), taskId);
     }
 
-    public static Specification<ActivityLog> equalStartDate(LocalDateTime startDate) {
-        return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("start_date"), startDate);
+    public static Specification<ActivityLog> fromStartDate(LocalDateTime startDate) {
+        return (root, query, criteriaBuilder) -> criteriaBuilder.greaterThanOrEqualTo(root.get("createdAt"), startDate);
     }
 
-    public static Specification<ActivityLog> equalEndDate(LocalDateTime endDate) {
-        return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("end_date"), endDate);
+    public static Specification<ActivityLog> untilEndDate(LocalDateTime endDate) {
+        return (root, query, criteriaBuilder) -> criteriaBuilder.lessThanOrEqualTo(root.get("createdAt"), endDate);
     }
 }

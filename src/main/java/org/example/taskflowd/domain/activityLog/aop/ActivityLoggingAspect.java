@@ -5,12 +5,17 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.example.taskflowd.common.annotation.ActivityLogger;
+import org.example.taskflowd.common.security.AuthUser;
 import org.example.taskflowd.domain.activityLog.enums.ActLogEnum;
 import org.example.taskflowd.domain.activityLog.service.ActivityLogInternalService;
 import org.example.taskflowd.domain.task.dto.response.TaskCreateResponse;
 import org.example.taskflowd.domain.task.entity.Task;
 import org.example.taskflowd.domain.task.enums.TaskStatus;
 import org.example.taskflowd.domain.task.service.TaskInternalService;
+import org.example.taskflowd.domain.user.entity.User;
+import org.example.taskflowd.domain.user.service.UserService;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 @Aspect
@@ -20,6 +25,7 @@ public class ActivityLoggingAspect {
 
     private final ActivityLogInternalService activityLogInternalService;
     private final TaskInternalService taskInternalService;
+    private final UserService userService;
 
     // 메서드에 @ActivityLogger를 붙일 경우 실행
     @Around(value = "@annotation(activityLogger)")
@@ -27,6 +33,7 @@ public class ActivityLoggingAspect {
 
         // 1. EnumType
         ActLogEnum logType = activityLogger.type();
+        User user = getCurrentUser();
 
         // 2. before process
         int paramIndex = activityLogger.paramIndex();
@@ -51,13 +58,18 @@ public class ActivityLoggingAspect {
             }
         }
 
-        saveActivityLog(logType, task, beforeStatus);
+        // 4. get message
+        String message = saveActivityLog(logType, task, beforeStatus);
+
+        // 5. save log
+        activityLogInternalService.saveActivityLog(logType, task, user, message);
+
         return result;
     }
 
-    private void saveActivityLog(ActLogEnum logType, Task task, TaskStatus beforeStatus) {
+    private String saveActivityLog(ActLogEnum logType, Task task, TaskStatus beforeStatus) {
 
-        String message = switch (logType) {
+        return switch (logType) {
             // Task
             case TASK_CREATED -> String.format("새로운 작업 '%s'를 생성했습니다.", task.getTitle());
             case TASK_UPDATED -> "작업 정보를 수정했습니다.";
@@ -68,8 +80,6 @@ public class ActivityLoggingAspect {
             case COMMENT_UPDATED -> "댓글을 수정했습니다.";
             case COMMENT_DELETED -> "댓글을 삭제했습니다.";
         };
-
-        activityLogInternalService.saveActivityLog(logType, task, message);
     }
 
     private Task getTask(ActLogEnum type, Long taskId, Object result) {
@@ -88,5 +98,17 @@ public class ActivityLoggingAspect {
             return null;
 
         return taskInternalService.getTaskByIdOrThrow(taskId).getStatus();
+    }
+
+    private User getCurrentUser() throws Exception {
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication != null && authentication.isAuthenticated()) {
+            AuthUser authUser = (AuthUser) authentication.getPrincipal();
+            return userService.getUser(authUser.id());
+        }
+
+        throw new Exception();
     }
 }
