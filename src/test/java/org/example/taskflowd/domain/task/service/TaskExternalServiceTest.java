@@ -1,6 +1,7 @@
 package org.example.taskflowd.domain.task.service;
 
 import org.example.taskflowd.domain.task.dto.request.TaskCreateRequest;
+import org.example.taskflowd.domain.task.dto.request.TaskStatusUpdateRequest;
 import org.example.taskflowd.domain.task.dto.request.TaskUpdateRequest;
 import org.example.taskflowd.domain.task.dto.response.*;
 import org.example.taskflowd.domain.task.entity.Task;
@@ -434,6 +435,66 @@ public class TaskExternalServiceTest {
                 .isInstanceOf(InvalidTaskException.class)
                 .extracting("errorCode")
                 .isEqualTo(TaskErrorCode.TSK_UPDATE_FAILED_INVALID_ASSIGNEE);
+
+        then(taskMapper).shouldHaveNoInteractions();
+    }
+
+    @Test
+    @DisplayName("updateTaskStatus: 작성자 권한 변경")
+    void updateTaskStatus_shouldSuccess_whenWriter() {
+        // given
+        Long taskId = 100L;
+        given(userService.getUser(writer.getId())).willReturn(writer); 
+        given(taskRepository.findByIdAndDeletedAtIsNull(taskId)).willReturn(Optional.of(task));
+        TaskStatusUpdateRequest request = new TaskStatusUpdateRequest(TaskStatus.DONE);
+        TaskStatusChangeResponse response = Mockito.mock(TaskStatusChangeResponse.class);
+        given(taskMapper.toStatusChangeResponse(any(Task.class))).willReturn(response);
+
+        // when
+        TaskStatusChangeResponse res = taskExternalService.updateTaskStatus(request, taskId, writer.getId());
+
+        // then
+        assertThat(res).isSameAs(response);
+
+        then(taskMapper).should().toStatusChangeResponse(taskCaptor.capture());
+        Task mutated = taskCaptor.getValue();
+        assertThat(mutated.getStatus()).isEqualTo(TaskStatus.DONE);
+    }
+    @Test
+    @DisplayName("updateTaskStatus: 담당자 권한 변경")
+    void updateTaskStatus_shouldSuccess_whenAssignee() {
+        // given
+        Long taskId = 100L;
+        given(userService.getUser(assignee.getId())).willReturn(assignee);
+        given(taskRepository.findByIdAndDeletedAtIsNull(taskId)).willReturn(Optional.of(task));
+        TaskStatusUpdateRequest request = new TaskStatusUpdateRequest(TaskStatus.DONE);
+        TaskStatusChangeResponse response = Mockito.mock(TaskStatusChangeResponse.class);
+        given(taskMapper.toStatusChangeResponse(any(Task.class))).willReturn(response);
+
+        // when
+        TaskStatusChangeResponse res = taskExternalService.updateTaskStatus(request, taskId, assignee.getId());
+
+        // then
+        assertThat(res).isSameAs(response);
+
+        then(taskMapper).should().toStatusChangeResponse(taskCaptor.capture());
+        Task mutated = taskCaptor.getValue();
+        assertThat(mutated.getStatus()).isEqualTo(TaskStatus.DONE);
+    }
+
+    @Test
+    @DisplayName("updateTaskStatus: 3자 권한 변경 시 Forbidden")
+    void updateTaskStatus_shouldThrow_whenAnother() {
+        // given
+        Long taskId = 100L;
+        given(userService.getUser(another.getId())).willReturn(another);
+        given(taskRepository.findByIdAndDeletedAtIsNull(taskId)).willReturn(Optional.of(task));
+        TaskStatusUpdateRequest request = new TaskStatusUpdateRequest(TaskStatus.IN_PROGRESS);
+
+        // when / then
+        assertThatThrownBy(() -> taskExternalService.updateTaskStatus(request, taskId, another.getId()))
+                .isInstanceOf(InvalidTaskException.class)
+                .hasMessage(TaskErrorCode.TSK_UPDATE_FAILED_FORBIDDEN.getMessage());
 
         then(taskMapper).shouldHaveNoInteractions();
     }
