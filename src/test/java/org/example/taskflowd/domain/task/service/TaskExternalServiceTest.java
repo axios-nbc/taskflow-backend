@@ -2,6 +2,9 @@ package org.example.taskflowd.domain.task.service;
 
 import org.example.taskflowd.domain.task.dto.request.TaskCreateRequest;
 import org.example.taskflowd.domain.task.dto.response.TaskCreateResponse;
+import org.example.taskflowd.domain.task.dto.response.TaskDetailResponse;
+import org.example.taskflowd.domain.task.dto.response.TaskListItemResponse;
+import org.example.taskflowd.domain.task.dto.response.TaskPageResponse;
 import org.example.taskflowd.domain.task.entity.Task;
 import org.example.taskflowd.domain.task.enums.TaskPriority;
 import org.example.taskflowd.domain.task.enums.TaskStatus;
@@ -20,11 +23,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.*;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -32,7 +38,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.*;
 
 
 @ExtendWith(MockitoExtension.class)
@@ -43,9 +49,12 @@ public class TaskExternalServiceTest {
     @Mock UserServiceImpl userService;
 
 
+    @Spy @InjectMocks TaskInternalServiceImpl taskInternalService;
     @InjectMocks TaskExternalService taskExternalService;
 
     @Captor ArgumentCaptor<Task> taskCaptor;
+    @Captor ArgumentCaptor<Specification<Task>> specCaptor;
+    @Captor ArgumentCaptor<Pageable> pageableCaptor;
 
     private User writer;
     private User assignee;
@@ -54,8 +63,8 @@ public class TaskExternalServiceTest {
     /* ========== Helper Method ========== */
     Task buildTask(String title, String description, User writer, User assignee) {
         return Task.builder()
-                .title("Task")
-                .description("Description")
+                .title(title)
+                .description(description)
                 .writer(writer)
                 .assignee(assignee)
                 .status(null)
@@ -65,8 +74,8 @@ public class TaskExternalServiceTest {
     }
     Task buildTask(String title, String description, User writer, User assignee, TaskStatus status, TaskPriority priority, LocalDateTime dueDate) {
         return Task.builder()
-                .title("Task")
-                .description("Description")
+                .title(title)
+                .description(description)
                 .writer(writer)
                 .assignee(assignee)
                 .status(status)
@@ -112,7 +121,7 @@ public class TaskExternalServiceTest {
             return t;
         });
 
-        UserResponseDto assigneeDto = Mockito.mock(UserResponseDto.class);
+        UserResponseDto assigneeDto = mock(UserResponseDto.class);
         given(taskMapper.toCreateResponse(any(Task.class))).willAnswer(inv -> {
             Task t = inv.getArgument(0);
             return TaskCreateResponse.toDto(
@@ -200,5 +209,120 @@ public class TaskExternalServiceTest {
         then(taskRepository).shouldHaveNoInteractions();
     }
 
+    @Test
+    @DisplayName("getTasks: TaskPageResponse 반환")
+    void getTasks_shouldReturnPage_whenGivePageable() {
+        // given
+        Pageable pageable = PageRequest.of(0, 2, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Specification<Task> spec = (root, query, cb) -> cb.conjunction();
 
+        Task t1 = buildTask("T1", "D1", writer, assignee, TaskStatus.TODO, TaskPriority.MEDIUM, LocalDateTime.now().plusDays(1));
+        ReflectionTestUtils.setField(t1, "id", 1L);
+        Task t2 = buildTask("T2", "D2", writer, assignee, TaskStatus.IN_PROGRESS, TaskPriority.LOW, LocalDateTime.now().plusDays(2));
+        ReflectionTestUtils.setField(t2, "id", 2L);
+
+        List<Task> tasks = List.of(t1, t2);
+        Page<Task> page = new PageImpl<>(tasks, pageable, tasks.size());
+
+        given(taskRepository.findAll(any(Specification.class), any(Pageable.class))).willReturn(page);
+
+        TaskListItemResponse r1 = mock(TaskListItemResponse.class);
+        TaskListItemResponse r2 = mock(TaskListItemResponse.class);
+
+        given(taskMapper.toListItemResponse(t1)).willReturn(r1);
+        given(taskMapper.toListItemResponse(t2)).willReturn(r2);
+
+        // when
+        TaskPageResponse response = taskExternalService.getTasks(pageable, spec);
+
+        then(taskRepository).should().findAll(specCaptor.capture(), pageableCaptor.capture());
+        assertThat(specCaptor.getValue()).isNotNull();
+        assertThat(pageableCaptor.getValue()).isEqualTo(pageable);
+
+        then(taskMapper).should(times(1)).toListItemResponse(t1);
+        then(taskMapper).should(times(1)).toListItemResponse(t2);
+        then(taskMapper).shouldHaveNoMoreInteractions();
+
+        List<TaskListItemResponse> contents = response.content();
+        org.assertj.core.api.Assertions.assertThat(contents).containsExactly(r1, r2);
+    }
+
+    @Test
+    @DisplayName("getTasks: 결과가 없으면 빈 리스트 반환")
+    void getTasks_shouldReturnEmpty_whenNoTasks() {
+        // given
+        Pageable pageable = PageRequest.of(0, 10);
+        Specification<Task> spec = (root, query, cb) -> cb.conjunction();
+
+        Page<Task> emptyPage = Page.empty(pageable);
+        given(taskRepository.findAll(any(Specification.class), any(Pageable.class))).willReturn(emptyPage);
+
+        // when
+        TaskPageResponse response = taskExternalService.getTasks(pageable, spec);
+
+        // then
+        then(taskMapper).shouldHaveNoInteractions();
+
+        // 내용 비어 있음 검증
+        List<TaskListItemResponse> actual = response.content(); // 또는 content()
+        org.assertj.core.api.Assertions.assertThat(actual).isEmpty();
+    }
+
+    @Test
+    @DisplayName("getDetailedTaskById: 유효한 ID면 Task를 매핑해 상세 DTO 반환")
+    void getDetailedTaskById_shouldReturnTaskDetailResponse_whenTaskExist() {
+        // given
+        Long taskId = 100L;
+        doReturn(task).when(taskInternalService).getTaskByIdOrThrow(100L);
+
+        UserResponseDto assigneeDto = mock(UserResponseDto.class);
+        TaskDetailResponse detail = TaskDetailResponse.toDto(
+                taskId,
+                task.getTitle(),
+                task.getDescription(),
+                task.getDueDate(),
+                task.getPriority().name(),
+                task.getStatus().name(),
+                null,
+                assigneeDto,
+                task.getCreatedAt(),
+                task.getUpdatedAt()
+        );
+        given(taskMapper.toDetailResponse(task)).willReturn(detail);
+
+        // when
+        Task getTask = taskInternalService.getTaskByIdOrThrow(taskId);
+        TaskDetailResponse res = taskMapper.toDetailResponse(getTask);
+
+        // then
+        assertThat(res).isNotNull();
+        assertThat(res.id()).isEqualTo(taskId);
+        assertThat(res.title()).isEqualTo("작업");
+        assertThat(res.description()).isEqualTo("내용");
+        assertThat(res.dueDate()).isEqualTo(task.getDueDate());
+        assertThat(res.priority()).isEqualTo("MEDIUM");
+        assertThat(res.status()).isEqualTo("TODO");
+        assertThat(res.assignee()).isSameAs(assigneeDto);
+
+        then(taskInternalService).should().getTaskByIdOrThrow(taskId);
+        then(taskMapper).should().toDetailResponse(task);
+        then(taskMapper).shouldHaveNoMoreInteractions();
+    }
+
+    @Test
+    @DisplayName("getDetailedTaskById: 유효하지 않은 ID면 예외 Throw")
+    void getDetailedTaskById_shouldThrow_whenTaskDoesntExist() {
+        Long taskId = 101L;
+
+        // given
+        doThrow(new InvalidTaskException(TaskErrorCode.TSK_SEARCH_FAILED_INVALID_ID))
+                .when(taskInternalService).getTaskByIdOrThrow(taskId);
+
+        // when / then
+        assertThatThrownBy(() -> taskInternalService.getTaskByIdOrThrow(taskId))
+                .isInstanceOf(InvalidTaskException.class)
+                .hasMessage(TaskErrorCode.TSK_SEARCH_FAILED_INVALID_ID.getMessage());
+
+        then(taskMapper).shouldHaveNoInteractions();
+    }
 }
