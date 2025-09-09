@@ -48,7 +48,6 @@ public class TaskExternalServiceTest {
     @Mock TaskMapper taskMapper;
     @Mock UserServiceImpl userService;
 
-
     @Spy @InjectMocks TaskInternalServiceImpl taskInternalService;
     @InjectMocks TaskExternalService taskExternalService;
 
@@ -483,7 +482,7 @@ public class TaskExternalServiceTest {
     }
 
     @Test
-    @DisplayName("updateTaskStatus: 3자 권한 변경 시 Forbidden")
+    @DisplayName("updateTaskStatus: 권환 없으면 Forbidden throw")
     void updateTaskStatus_shouldThrow_whenAnother() {
         // given
         Long taskId = 100L;
@@ -497,5 +496,50 @@ public class TaskExternalServiceTest {
                 .hasMessage(TaskErrorCode.TSK_UPDATE_FAILED_FORBIDDEN.getMessage());
 
         then(taskMapper).shouldHaveNoInteractions();
+    }
+
+    @Test
+    @DisplayName("deleteTask: 작성자 작업 삭제")
+    void deleteTask_shouldSuccess_whenWriter() {
+        // given
+        Long taskId = 100L;
+        given(userService.getUser(writer.getId())).willReturn(writer);
+        given(taskRepository.findByIdAndDeletedAtIsNull(taskId)).willReturn(Optional.of(task));
+
+        // when
+        taskExternalService.deleteTask(taskId, writer.getId());
+
+        // then
+        assertThat(task.getDeletedAt()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("deleteTask: 담당자 작업 삭제")
+    void deleteTask_shouldSuccess_whenAssignee() {
+        // given
+        Long taskId = 100L;
+        given(userService.getUser(assignee.getId())).willReturn(assignee);
+        given(taskRepository.findByIdAndDeletedAtIsNull(taskId)).willReturn(Optional.of(task));
+
+        // when
+        taskExternalService.deleteTask(taskId, assignee.getId());
+
+        // then
+        assertThat(task.getDeletedAt()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("deleteTask: 3자 삭제 시도 시 Forbidden")
+    void deleteTask_shouldThrow_whenAnother() {
+        // given
+        Long taskId = 100L;
+        given(userService.getUser(another.getId())).willReturn(another);
+        given(taskRepository.findByIdAndDeletedAtIsNull(taskId)).willReturn(Optional.of(task));
+
+        assertThatThrownBy(() -> taskExternalService.deleteTask(taskId, another.getId()))
+                .isInstanceOf(InvalidTaskException.class)
+                .hasMessage(TaskErrorCode.TSK_UPDATE_FAILED_FORBIDDEN.getMessage());
+
+        assertThat(task.getDeletedAt()).isNull();
     }
 }
