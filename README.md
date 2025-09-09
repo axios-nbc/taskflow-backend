@@ -1,14 +1,15 @@
 # 📅 TaskFlow Backend
 
-> TaskFlow는 팀 기반의 작업 관리 플랫폼으로, 효율적인 협업과 프로젝트 관리를 위한 백엔드 API 서비스입니다. 
+> TaskFlow는 팀 기반의 작업 관리 플랫폼으로, 효율적인 협업과 프로젝트 관리를 위한 백엔드 API 서비스입니다.
+> 
 > 프론트엔드와 연동하여 회원 관리, 작업 관리, 팀 관리, 대시보드 등의 핵심 기능을 제공합니다.
 <img width="1528" height="540" alt="image" src="https://github.com/user-attachments/assets/ac6d24c7-152c-4190-a4ba-45ff5b5b0aaf" />
 
-## 데모 링크
+## Demo 링크
 
-**Frontend Demo**: [웹사이트](https://taskflow-ten-tan.vercel.app)
+**Frontend Demo**: [웹사이트](https://taskflow-ten-tan.vercel.app) 🔗
 
-**ERD**: [사진 링크](https://github.com/axios-nbc/taskflow-backend/issues/38)
+**ERD**: [사진 링크](https://github.com/axios-nbc/taskflow-backend/issues/38) 🔗
 
 ## 주요 기능
 
