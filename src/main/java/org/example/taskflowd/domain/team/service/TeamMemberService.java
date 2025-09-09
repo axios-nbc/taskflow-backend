@@ -45,6 +45,7 @@ public class TeamMemberService {
         return convertToTeamResponse(team);
     }
 
+    //팀멤버 제거, 소프트 딜리트 학습했음
     @Transactional
     public TeamResponse removeMember(Long teamId, Long userId) {
         Team team = findTeamById(teamId);
