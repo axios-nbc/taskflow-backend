@@ -26,7 +26,6 @@ public class Team extends BaseEntity {
 
     private String description;
 
-    private String members;
 
     // 양방향 관계 설정
     @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
@@ -48,15 +47,6 @@ public class Team extends BaseEntity {
         }
     }
 
-    public void updateMembers(String members) {
-        this.members = members;
-    }
-
-    // 팀 멤버 추가
-    public void addMember(TeamMember teamMember) {
-        this.teamMembers.add(teamMember);
-        teamMember.setTeam(this);
-    }
 
     // 팀 멤버 제거
     public void removeMember(TeamMember teamMember) {
@@ -64,8 +54,4 @@ public class Team extends BaseEntity {
         teamMember.setTeam(null);
     }
 
-    // 팀 멤버 수 조회
-    public int getMemberCount() {
-        return this.teamMembers.size();
-    }
 }

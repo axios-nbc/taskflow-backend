@@ -29,12 +29,6 @@ public class TeamMember extends BaseEntity {
     @Setter
     private Team team;
 
-    // 생성자
-    public TeamMember(Long id, Long userId, String role) {
-        this.id = id;
-        this.userId = userId;
-        this.role = role;
-    }
 
     // 편의 생성자
     public TeamMember(Team team, Long userId, String role) {
@@ -44,10 +38,4 @@ public class TeamMember extends BaseEntity {
         this.team = team;
     }
 
-    // 비즈니스 메서드
-    public void updateRole(String role) {
-        if (role != null && !role.trim().isEmpty()) {
-            this.role = role;
-        }
-    }
 }
