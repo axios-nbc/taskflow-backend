@@ -1,10 +1,8 @@
 package org.example.taskflowd.domain.task.service;
 
 import org.example.taskflowd.domain.task.dto.request.TaskCreateRequest;
-import org.example.taskflowd.domain.task.dto.response.TaskCreateResponse;
-import org.example.taskflowd.domain.task.dto.response.TaskDetailResponse;
-import org.example.taskflowd.domain.task.dto.response.TaskListItemResponse;
-import org.example.taskflowd.domain.task.dto.response.TaskPageResponse;
+import org.example.taskflowd.domain.task.dto.request.TaskUpdateRequest;
+import org.example.taskflowd.domain.task.dto.response.*;
 import org.example.taskflowd.domain.task.entity.Task;
 import org.example.taskflowd.domain.task.enums.TaskPriority;
 import org.example.taskflowd.domain.task.enums.TaskStatus;
@@ -31,6 +29,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -58,6 +57,7 @@ public class TaskExternalServiceTest {
 
     private User writer;
     private User assignee;
+    private User another;
     private Task task;
 
     /* ========== Helper Method ========== */
@@ -91,6 +91,8 @@ public class TaskExternalServiceTest {
         ReflectionTestUtils.setField(writer, "id", 10L);
         assignee = new User("assignee", "assignee123", "b@example.com", "55AA55");
         ReflectionTestUtils.setField(assignee, "id", 20L);
+        another = new User("another", "another123", "c@example.com", "55AA55");
+        ReflectionTestUtils.setField(another, "id", 30L);
 
         task = buildTask("작업", "내용", writer, assignee, TaskStatus.TODO, TaskPriority.MEDIUM, LocalDateTime.now());
         ReflectionTestUtils.setField(task, "id", 100L);
@@ -322,6 +324,116 @@ public class TaskExternalServiceTest {
         assertThatThrownBy(() -> taskInternalService.getTaskByIdOrThrow(taskId))
                 .isInstanceOf(InvalidTaskException.class)
                 .hasMessage(TaskErrorCode.TSK_SEARCH_FAILED_INVALID_ID.getMessage());
+
+        then(taskMapper).shouldHaveNoInteractions();
+    }
+
+    @Test
+    @DisplayName("updateTask: 담장자 유지")
+    void updateTask_shouldSuccess_whenKeepAssignee() {
+        // given
+        Long taskId = 100L;
+
+        given(taskRepository.findByIdAndDeletedAtIsNull(taskId)).willReturn(Optional.of(task));
+        given(userService.getUser(writer.getId())).willReturn(writer);
+
+        LocalDateTime newDue = LocalDateTime.now().plusDays(3);
+        TaskUpdateRequest request = new TaskUpdateRequest(
+                "새 제목", "새 내용", newDue, TaskPriority.HIGH, TaskStatus.DONE, assignee.getId());
+
+        TaskUpdateResponse response = Mockito.mock(TaskUpdateResponse.class);
+        given(taskMapper.toUpdateResponse(any(Task.class))).willReturn(response);
+
+        // when
+        TaskUpdateResponse res = taskExternalService.updateTask(request, taskId, writer.getId());
+
+        // then
+        assertThat(res).isSameAs(response);
+        then(taskMapper).should().toUpdateResponse(taskCaptor.capture());
+        Task mutated = taskCaptor.getValue();
+
+        assertThat(mutated.getTitle()).isEqualTo("새 제목");
+        assertThat(mutated.getDescription()).isEqualTo("새 내용");
+        assertThat(mutated.getDueDate()).isEqualTo(newDue);
+        assertThat(mutated.getPriority()).isEqualTo(TaskPriority.HIGH);
+        assertThat(mutated.getStatus()).isEqualTo(TaskStatus.DONE);
+        assertThat(mutated.getAssignee().getId()).isEqualTo(assignee.getId());
+    }
+
+    @Test
+    @DisplayName("updateTask: 담장자 유지")
+    void updateTask_shouldSuccess_whenChangeAssignee() {
+        // given
+        Long taskId = 100L;
+
+        given(taskRepository.findByIdAndDeletedAtIsNull(taskId)).willReturn(Optional.of(task));
+        given(userService.getUser(writer.getId())).willReturn(writer);
+        given(userService.getUser(another.getId())).willReturn(another);
+
+        LocalDateTime newDue = LocalDateTime.now().plusDays(3);
+        TaskUpdateRequest request = new TaskUpdateRequest(
+                "새 제목", "새 내용", newDue, TaskPriority.HIGH, TaskStatus.DONE, another.getId());
+
+        TaskUpdateResponse response = Mockito.mock(TaskUpdateResponse.class);
+        given(taskMapper.toUpdateResponse(any(Task.class))).willReturn(response);
+
+        // when
+        TaskUpdateResponse res = taskExternalService.updateTask(request, taskId, writer.getId());
+
+        // then
+        assertThat(res).isSameAs(response);
+        then(taskMapper).should().toUpdateResponse(taskCaptor.capture());
+        Task mutated = taskCaptor.getValue();
+
+        assertThat(mutated.getTitle()).isEqualTo("새 제목");
+        assertThat(mutated.getDescription()).isEqualTo("새 내용");
+        assertThat(mutated.getDueDate()).isEqualTo(newDue);
+        assertThat(mutated.getPriority()).isEqualTo(TaskPriority.HIGH);
+        assertThat(mutated.getStatus()).isEqualTo(TaskStatus.DONE);
+        assertThat(mutated.getAssignee().getId()).isEqualTo(another.getId());
+    }
+
+    @Test
+    @DisplayName("updateTask: 권한없을 경우 Forbidden")
+    void updateTask_shouldThrow_whenForbidden() {
+        // given
+        Long taskId = 100L;
+
+        given(taskRepository.findByIdAndDeletedAtIsNull(taskId)).willReturn(Optional.of(task));
+        given(userService.getUser(another.getId())).willReturn(another);
+
+        LocalDateTime newDue = LocalDateTime.now().plusDays(3);
+        TaskUpdateRequest request = new TaskUpdateRequest(
+                "새 제목", "새 내용", newDue, TaskPriority.HIGH, TaskStatus.DONE, assignee.getId());
+
+        // when / then
+        assertThatThrownBy(() -> taskExternalService.updateTask(request, taskId, another.getId()))
+                .isInstanceOf(InvalidTaskException.class)
+                .hasMessage(TaskErrorCode.TSK_UPDATE_FAILED_FORBIDDEN.getMessage());
+
+        then(taskMapper).shouldHaveNoInteractions();
+    }
+
+    @Test
+    @DisplayName("updateTask: 존재하지 않는 assignee일 시 throw")
+    void updateTask_shouldThrow_whenGiveInvalidAssignee() {
+        // given
+        Long taskId = 100L;
+        Long invalidAssigneeId = 1000L;
+
+        given(taskRepository.findByIdAndDeletedAtIsNull(taskId)).willReturn(Optional.of(task));
+        given(userService.getUser(writer.getId())).willReturn(writer);
+        given(userService.getUser(invalidAssigneeId))
+                .willThrow(new InvalidTaskException(TaskErrorCode.TSK_UPDATE_FAILED_INVALID_ASSIGNEE));
+
+        TaskUpdateRequest request = new TaskUpdateRequest(
+                "새 제목", "새 내용", LocalDateTime.now(), TaskPriority.HIGH, TaskStatus.DONE, invalidAssigneeId);
+
+        // when / then
+        assertThatThrownBy(() -> taskExternalService.updateTask(request, taskId, writer.getId()))
+                .isInstanceOf(InvalidTaskException.class)
+                .extracting("errorCode")
+                .isEqualTo(TaskErrorCode.TSK_UPDATE_FAILED_INVALID_ASSIGNEE);
 
         then(taskMapper).shouldHaveNoInteractions();
     }
